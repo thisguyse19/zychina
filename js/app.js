@@ -3887,6 +3887,11 @@ const ONBOARD_STEP_COUNT = 4;
 let onboardStep = 0;
 let onboardLangChosen = false;
 
+function blurOnboardActionFocus() {
+  document.getElementById('onboardNext')?.blur();
+  document.getElementById('onboardBack')?.blur();
+}
+
 function renderOnboardStep() {
   const pill = document.getElementById('onboardPill');
   if (pill) pill.textContent = `${onboardStep + 1} / ${ONBOARD_STEP_COUNT}`;
@@ -3907,6 +3912,7 @@ function renderOnboardStep() {
     next.disabled = onboardStep === 0 && !onboardLangChosen;
   }
   updateOnboardLangButtons();
+  requestAnimationFrame(() => blurOnboardActionFocus());
   syncModalScrollLock();
 }
 
@@ -3944,6 +3950,7 @@ function pickOnboardLang(lang) {
 }
 
 function onboardNextClick() {
+  blurOnboardActionFocus();
   if (onboardStep === 0 && !onboardLangChosen) return;
   if (onboardStep === ONBOARD_STEP_COUNT - 2 && isAlreadyInstalledWebApp()) {
     finishOnboarding();
@@ -3962,6 +3969,7 @@ function onboardNextClick() {
 }
 
 function onboardBackClick() {
+  blurOnboardActionFocus();
   if (onboardStep <= 0) return;
   onboardStep -= 1;
   renderOnboardStep();
