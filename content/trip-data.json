@@ -1,11 +1,22 @@
 {
-  "appVersion": "1.1.0",
+  "appVersion": "1.1.1",
   "versions": [
+    {
+      "v": "1.1.1",
+      "date": "2026-05-17",
+      "title": "Place photos & calendar date cards",
+      "latest": true,
+      "changes": [
+        "Day cards show calendar dates (Jun 12 / 6月12日) large; route text moves to subtitle",
+        "Per-day and stay images use Unsplash photos geotagged to each location",
+        "Section hero banners updated to match Chongqing, Duku, Sayram, and related stops"
+      ]
+    },
     {
       "v": "1.1.0",
       "date": "2026-05-17",
       "title": "June 11–23 Xinjiang road-trip itinerary (from route image)",
-      "latest": true,
+      "latest": false,
       "changes": [
         "Full 13-day Jun 11–23 schedule: Singapore ↔ Chongqing ↔ Xinjiang Duku loop ↔ Singapore",
         "All route-card sights, hotels, and city chains preserved with bilingual copy",
@@ -560,7 +571,7 @@
       "map.xjTitle": "新疆地图钉",
       "map.xjSub": "首府、天池、吐鲁番盆地环线",
       "nav.labels.overview": "行程",
-      "nav.labels.city": "按日期",
+      "nav.labels.city": "按出行日期",
       "modal.historyTitle": "编辑历程",
       "modal.historyClose": "关闭",
       "modal.diffRollback": "恢复到此处",
@@ -630,7 +641,8 @@
       "pdf.budgetPpLbl": "人均（取整）",
       "pdf.budgetGrpLbl": "整组估算",
       "nav.xj1.days": "6月14–19 · 独库北线",
-      "nav.xj2.days": "6月20–23 · 南疆回程"
+      "nav.xj2.days": "6月20–23 · 南线返程",
+      "checklist.date.unscheduled": "未设日期"
     }
   },
   "itinerary": {
@@ -643,8 +655,12 @@
           "zh": "周四"
         },
         "date": {
-          "en": "Jun 11 · Singapore → Chongqing",
-          "zh": "6月11日 · 新加坡 — 重庆"
+          "en": "Jun 11",
+          "zh": "6月11日"
+        },
+        "route": {
+          "en": "Singapore → Chongqing",
+          "zh": "新加坡 — 重庆"
         },
         "title": {
           "en": "Fly in · first night in Chongqing",
@@ -654,10 +670,10 @@
           "en": "International flight · stay in Chongqing",
           "zh": "国际航班 · 住在重庆"
         },
-        "img": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1496939376851-89342e90adcd?w=960&q=80",
         "imgAlt": {
-          "en": "Chongqing skyline",
-          "zh": "重庆天际线"
+          "en": "Marina Bay, Singapore",
+          "zh": "新加坡滨海湾"
         },
         "desc": {
           "en": "Land at Chongqing Jiangbei (CKG) from Singapore. Clear immigration, transfer to your hotel, and keep the evening light — humidity hits harder than Xinjiang dryness later in the trip.",
@@ -713,8 +729,12 @@
           "zh": "周五"
         },
         "date": {
-          "en": "Jun 12 · Chongqing",
-          "zh": "6月12日 · 重庆"
+          "en": "Jun 12",
+          "zh": "6月12日"
+        },
+        "route": {
+          "en": "Chongqing",
+          "zh": "重庆"
         },
         "title": {
           "en": "Explore Chongqing",
@@ -724,10 +744,10 @@
           "en": "Full city day · Atour Hotel (Huanshan Park / Jiangbei Airport area)",
           "zh": "全天市内 · 亚朵酒店（环山公园/江北机场店）"
         },
-        "img": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1716146705025-dadcab92b491?w=960&q=80",
         "imgAlt": {
-          "en": "Chongqing streets",
-          "zh": "重庆街区"
+          "en": "Hongyadong, Chongqing",
+          "zh": "重庆洪崖洞"
         },
         "desc": {
           "en": "Your anchor stay: Atour Hotel, Huanshan Park Metro Station, Chongqing Jiangbei Airport branch. Pace riverfront layers, hotpot, and stair streets — save legs for long coach days ahead.",
@@ -794,8 +814,12 @@
           "zh": "周六"
         },
         "date": {
-          "en": "Jun 13 · Chongqing → Ürümqi",
-          "zh": "6月13日 · 重庆 — 乌鲁木齐"
+          "en": "Jun 13",
+          "zh": "6月13日"
+        },
+        "route": {
+          "en": "Chongqing → Ürümqi",
+          "zh": "重庆 — 乌鲁木齐"
         },
         "title": {
           "en": "Fly west to Ürümqi",
@@ -805,10 +829,10 @@
           "en": "Domestic flight · Qianjiangji Boutique Hotel (Urumqi HSR)",
           "zh": "国内航班 · 仟疆集精品酒店（乌鲁木齐高铁站店）"
         },
-        "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1731159842857-56d562a919dd?w=960&q=80",
         "imgAlt": {
-          "en": "Flight to Xinjiang",
-          "zh": "飞往新疆"
+          "en": "Xinjiang bazaar (Ürümqi gateway)",
+          "zh": "新疆巴扎（进疆门户）"
         },
         "desc": {
           "en": "Morning buffer in Chongqing if needed, then CKG → URC. Check in at Qianjiangji Boutique Hotel — Urumqi High-speed Railway Station branch for easy rail connections.",
@@ -873,8 +897,12 @@
           "zh": "周日"
         },
         "date": {
-          "en": "Jun 14 · Ürümqi",
-          "zh": "6月14日 · 乌鲁木齐"
+          "en": "Jun 14",
+          "zh": "6月14日"
+        },
+        "route": {
+          "en": "Ürümqi",
+          "zh": "乌鲁木齐"
         },
         "title": {
           "en": "Ürümqi buffer day",
@@ -884,10 +912,10 @@
           "en": "City day · same Qianjiangji HSR hotel",
           "zh": "市内休整 · 仟疆集高铁站店"
         },
-        "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1731159842857-56d562a919dd?w=960&q=80",
         "imgAlt": {
-          "en": "Ürümqi city",
-          "zh": "乌鲁木齐"
+          "en": "Ürümqi area bazaar",
+          "zh": "乌鲁木齐片区巴扎"
         },
         "desc": {
           "en": "Recover from flights, stock snacks/sunscreen, confirm car hire or driver for the Duku corridor. Light bazaar walk if energy allows.",
@@ -928,8 +956,12 @@
           "zh": "周一"
         },
         "date": {
-          "en": "Jun 15 · Hutubi → Shawan → Kuytun",
-          "zh": "6月15日 · 呼图壁 — 沙湾 — 奎屯"
+          "en": "Jun 15",
+          "zh": "6月15日"
+        },
+        "route": {
+          "en": "Hutubi → Shawan → Kuytun",
+          "zh": "呼图壁 — 沙湾 — 奎屯"
         },
         "title": {
           "en": "Danxia & Anjihai canyon day",
@@ -939,10 +971,10 @@
           "en": "Road day · M-Cotton Hotel Kuytun",
           "zh": "行车日 · 奎屯 M·棉酒店"
         },
-        "img": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1720582429151-6a72bfcf0dc3?w=960&q=80",
         "imgAlt": {
-          "en": "Xinjiang canyon road",
-          "zh": "新疆峡谷公路"
+          "en": "Anjihai Grand Canyon",
+          "zh": "安集海大峡谷"
         },
         "desc": {
           "en": "Drive the corridor toward Kuytun with three headline stops from your route card. Overnight: M-Cotton Hotel — Kuytun Huijia Era Shopping Center branch.",
@@ -1038,8 +1070,12 @@
           "zh": "周二"
         },
         "date": {
-          "en": "Jun 16 · Karamay → Wusu → Nilka → Xinyuan",
-          "zh": "6月16日 · 克拉玛依 — 乌苏 — 尼勒克 — 新源"
+          "en": "Jun 16",
+          "zh": "6月16日"
+        },
+        "route": {
+          "en": "Karamay → Wusu → Nilka → Xinyuan",
+          "zh": "克拉玛依 — 乌苏 — 尼勒克 — 新源"
         },
         "title": {
           "en": "Duku Highway core · Nalati side",
@@ -1049,10 +1085,10 @@
           "en": "Long drive · Beauty of Nature Homestay (Nalati scenic area)",
           "zh": "长途行车 · 自然之美民宿（那拉提景区店）"
         },
-        "img": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1757069540493-8f74088b3269?w=960&q=80",
         "imgAlt": {
-          "en": "Mountain highway",
-          "zh": "山区公路"
+          "en": "Duku Highway · Tianshan pass",
+          "zh": "独库公路 · 天山垭口"
         },
         "desc": {
           "en": "Five pinned stops including Duku mile-zero at Dushanzi, the grand canyon, mountain passes, and gallery meadows. Stay: Beauty of Nature Homestay — Nalati Scenic Area branch.",
@@ -1159,8 +1195,12 @@
           "zh": "周三"
         },
         "date": {
-          "en": "Jun 17 · Tekes County",
-          "zh": "6月17日 · 特克斯县"
+          "en": "Jun 17",
+          "zh": "6月17日"
+        },
+        "route": {
+          "en": "Tekes County",
+          "zh": "特克斯县"
         },
         "title": {
           "en": "Tekes Bagua City",
@@ -1170,10 +1210,10 @@
           "en": "County seat · Tekes Yujiya Homestay",
           "zh": "特克斯县 · 玉佶雅民宿"
         },
-        "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=960&q=80",
         "imgAlt": {
-          "en": "Tekes town",
-          "zh": "特克斯"
+          "en": "Ili grassland (Tekes region)",
+          "zh": "伊犁草原（特克斯方向）"
         },
         "desc": {
           "en": "Explore the octagonal “Bagua” street grid. Stay: Tekes Yujiya Homestay — Tekes Bagua City branch.",
@@ -1225,8 +1265,12 @@
           "zh": "周四"
         },
         "date": {
-          "en": "Jun 18 · Tekes County",
-          "zh": "6月18日 · 特克斯县"
+          "en": "Jun 18",
+          "zh": "6月18日"
+        },
+        "route": {
+          "en": "Tekes County",
+          "zh": "特克斯县"
         },
         "title": {
           "en": "Kalajun Scenic Area",
@@ -1236,7 +1280,7 @@
           "en": "Full park day · same Yujiya homestay",
           "zh": "景区全日 · 玉佶雅民宿"
         },
-        "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1752850818815-1befbf493c0d?w=960&q=80",
         "imgAlt": {
           "en": "Kalajun grassland",
           "zh": "喀拉峻草原"
@@ -1280,8 +1324,12 @@
           "zh": "周五"
         },
         "date": {
-          "en": "Jun 19 · Zhaosu",
-          "zh": "6月19日 · 昭苏"
+          "en": "Jun 19",
+          "zh": "6月19日"
+        },
+        "route": {
+          "en": "Zhaosu",
+          "zh": "昭苏"
         },
         "title": {
           "en": "Xiata Ancient Road National Forest Park",
@@ -1291,10 +1339,10 @@
           "en": "Zhaosu day · Yunsu boutique homestay (75th Regiment)",
           "zh": "昭苏 · 云宿轻奢民宿（75团店）"
         },
-        "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1642129412847-ea049c5def2e?w=960&q=80",
         "imgAlt": {
-          "en": "Xiata valley",
-          "zh": "夏塔"
+          "en": "Xiata, Zhaosu",
+          "zh": "昭苏夏塔"
         },
         "desc": {
           "en": "Hike / shuttle day in Xiata. Overnight: Zhaosu Yunsu Light Luxury Boutique Homestay — 75th Regiment branch.",
@@ -1348,8 +1396,12 @@
           "zh": "周六"
         },
         "date": {
-          "en": "Jun 20 · Zhaosu → Yining City",
-          "zh": "6月20日 · 昭苏 — 伊宁市"
+          "en": "Jun 20",
+          "zh": "6月20日"
+        },
+        "route": {
+          "en": "Zhaosu → Yining City",
+          "zh": "昭苏 — 伊宁市"
         },
         "title": {
           "en": "Zhaosu Jade Lake · transfer to Yining",
@@ -1359,10 +1411,10 @@
           "en": "Scenic lake · Jiduqiu Villa — Yining Airport",
           "zh": "玉湖景区 · 几度秋美宿（伊宁机场店）"
         },
-        "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1717936882369-3b868dd7eb20?w=960&q=80",
         "imgAlt": {
-          "en": "Jade lake",
-          "zh": "玉湖"
+          "en": "Alpine lake, Ili (Jade Lake day)",
+          "zh": "伊犁高原湖泊（玉湖日）"
         },
         "desc": {
           "en": "Morning at Zhaosu Jade Lake Scenic Area, then road to Yining. Stay: Jiduqiu Villa Leisure Vacation Homestay — Yining Airport branch.",
@@ -1425,8 +1477,12 @@
           "zh": "周日"
         },
         "date": {
-          "en": "Jun 21 · Bole",
-          "zh": "6月21日 · 博乐"
+          "en": "Jun 21",
+          "zh": "6月21日"
+        },
+        "route": {
+          "en": "Bole",
+          "zh": "博乐"
         },
         "title": {
           "en": "Sayram Lake",
@@ -1436,7 +1492,7 @@
           "en": "Bole · Qiufeng Hotel (Bole HSR)",
           "zh": "博乐 · 秋枫酒店（博乐高铁站店）"
         },
-        "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1570897011989-0c1412edc583?w=960&q=80",
         "imgAlt": {
           "en": "Sayram Lake",
           "zh": "赛里木湖"
@@ -1491,8 +1547,12 @@
           "zh": "周一"
         },
         "date": {
-          "en": "Jun 22 · Ürümqi",
-          "zh": "6月22日 · 乌鲁木齐"
+          "en": "Jun 22",
+          "zh": "6月22日"
+        },
+        "route": {
+          "en": "Ürümqi",
+          "zh": "乌鲁木齐"
         },
         "title": {
           "en": "Return to Ürümqi",
@@ -1502,10 +1562,10 @@
           "en": "Transit / shopping buffer before homeward flight",
           "zh": "返程前中转 · 补给"
         },
-        "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1731159842857-56d562a919dd?w=960&q=80",
         "imgAlt": {
-          "en": "Ürümqi",
-          "zh": "乌鲁木齐"
+          "en": "Ürümqi return",
+          "zh": "返回乌鲁木齐"
         },
         "desc": {
           "en": "Drive or rail back to Ürümqi for final laundry, dried fruit gifts, and early rest before the long flight chain home.",
@@ -1546,8 +1606,12 @@
           "zh": "周二"
         },
         "date": {
-          "en": "Jun 23 · Ürümqi → Chongqing → Singapore",
-          "zh": "6月23日 · 乌鲁木齐 — 重庆 — 新加坡"
+          "en": "Jun 23",
+          "zh": "6月23日"
+        },
+        "route": {
+          "en": "Ürümqi → Chongqing → Singapore",
+          "zh": "乌鲁木齐 — 重庆 — 新加坡"
         },
         "title": {
           "en": "Fly home via Chongqing",
@@ -1557,10 +1621,10 @@
           "en": "URC → CKG → SIN · trip end",
           "zh": "乌鲁木齐—重庆—新加坡 · 行程结束"
         },
-        "img": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=960&q=80",
+        "img": "https://images.unsplash.com/photo-1588515890775-0596bea8fb5d?w=960&q=80",
         "imgAlt": {
-          "en": "Homeward flights",
-          "zh": "返程航班"
+          "en": "Chongqing · homeward via CKG",
+          "zh": "重庆 · 经江北返程"
         },
         "desc": {
           "en": "Long travel day on the route card — allow buffer at Chongqing if separate tickets; hydrate on each leg.",
@@ -2050,7 +2114,7 @@
         "en": "First night after SIN→CKG — keep transfer simple.",
         "zh": "首晚新加坡—重庆航班后，接驳从简。"
       },
-      "img": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=960&q=80"
+      "img": "https://images.unsplash.com/photo-1716146705025-dadcab92b491?w=960&q=80"
     },
     {
       "id": "stay-jun12",
@@ -2084,7 +2148,7 @@
         "en": "Exact property from itinerary image.",
         "zh": "行程图指定酒店。"
       },
-      "img": "https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=960&q=80"
+      "img": "https://images.unsplash.com/photo-1716146705025-dadcab92b491?w=960&q=80"
     },
     {
       "id": "stay-jun13-14",
@@ -2118,7 +2182,7 @@
         "en": "Two nights: arrival Jun 13 + buffer Jun 14.",
         "zh": "两晚：13日抵达 + 14日休整。"
       },
-      "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80"
+      "img": "https://images.unsplash.com/photo-1731159842857-56d562a919dd?w=960&q=80"
     },
     {
       "id": "stay-jun15",
@@ -2152,7 +2216,7 @@
         "en": "After Anjihai / Danxia driving day.",
         "zh": "丹霞与安集海行车日后。"
       },
-      "img": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=960&q=80"
+      "img": "https://images.unsplash.com/photo-1720582429151-6a72bfcf0dc3?w=960&q=80"
     },
     {
       "id": "stay-jun16",
@@ -2186,7 +2250,7 @@
         "en": "Post Duku pass day — early sleep helps.",
         "zh": "独库垭口日后建议早睡。"
       },
-      "img": "https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=960&q=80"
+      "img": "https://images.unsplash.com/photo-1624644128945-920c0da6931b?w=960&q=80"
     },
     {
       "id": "stay-jun17-18",
@@ -2220,7 +2284,7 @@
         "en": "Covers Bagua City + Kalajun days.",
         "zh": "覆盖八卦城与喀拉峻两日。"
       },
-      "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80"
+      "img": "https://images.unsplash.com/photo-1501854140801-50d01698950b?w=960&q=80"
     },
     {
       "id": "stay-jun19",
@@ -2254,7 +2318,7 @@
         "en": "Xiata day — pack rain shell.",
         "zh": "夏塔日备雨衣。"
       },
-      "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80"
+      "img": "https://images.unsplash.com/photo-1642129412847-ea049c5def2e?w=960&q=80"
     },
     {
       "id": "stay-jun20",
@@ -2288,7 +2352,7 @@
         "en": "After Jade Lake — handy for next-day westward driving.",
         "zh": "玉湖后入住，便于次日西行。"
       },
-      "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80"
+      "img": "https://images.unsplash.com/photo-1717936882369-3b868dd7eb20?w=960&q=80"
     },
     {
       "id": "stay-jun21",
@@ -2322,7 +2386,7 @@
         "en": "Sayram Lake day — windproof gear.",
         "zh": "赛里木湖日防风保暖。"
       },
-      "img": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=960&q=80"
+      "img": "https://images.unsplash.com/photo-1624038465512-dbc49bb53537?w=960&q=80"
     }
   ],
   "costs": [

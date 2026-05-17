@@ -2014,6 +2014,32 @@ function daySeqLabel(num) {
   return APP_LANG === 'zh' ? `第 ${n} 天` : `Day ${n}`;
 }
 
+/** Calendar-only label for the large day-card figure (not route text). */
+function dayCalendarLabel(d) {
+  if (!d || d.date == null) return '';
+  if (d.route != null) return Tx(d.date);
+  const t = Tx(d.date);
+  const sep = t.includes(' · ') ? ' · ' : t.includes(' — ') ? ' — ' : null;
+  if (sep) return t.split(sep)[0].trim();
+  return t;
+}
+
+function dayRouteLine(d) {
+  if (!d) return '';
+  if (d.route != null) return Tx(d.route);
+  const t = Tx(d.date);
+  const sep = t.includes(' · ') ? ' · ' : t.includes(' — ') ? ' — ' : null;
+  if (sep) return t.split(sep).slice(1).join(sep).trim();
+  return '';
+}
+
+function dayMetaCombined(d) {
+  const route = dayRouteLine(d);
+  const meta = d.meta != null ? Tx(d.meta) : '';
+  if (route && meta) return `${route} · ${meta}`;
+  return route || meta;
+}
+
 function renderDays(days, containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
@@ -2052,18 +2078,19 @@ function renderDays(days, containerId) {
         .join('');
       const desc = escapeHtml(Tx(d.desc));
       const title = escapeHtml(Tx(d.title));
-      const meta = escapeHtml(Tx(d.meta));
       return `
     <div class="day-card" id="card-${d.id}" data-card-id="${d.id}">
       <button class="del-btn" onclick="deleteCard('card-${d.id}')">×</button>
       <div class="day-header" onclick="toggleDay('card-${d.id}')">
         <div class="day-num"><span class="day-weekday">${escapeHtml(Tx(d.day))}</span><span class="day-date">${escapeHtml(
-          Tx(d.date),
+          dayCalendarLabel(d),
         )}</span><span class="day-sequence">${escapeHtml(daySeqLabel(d.num))}</span></div>
         <div class="day-info">
           <div>
             <div class="day-title-text" data-key="${d.id}-title" data-label="Day ${d.num} title">${title}</div>
-            <div class="day-meta"><span data-key="${d.id}-meta" data-label="Day ${d.num} route/distance">${meta}</span></div>
+            <div class="day-meta"><span data-key="${d.id}-meta" data-label="Day ${d.num} route/distance">${escapeHtml(
+              dayMetaCombined(d),
+            )}</span></div>
           </div>
           <div class="day-toggle">⌄</div>
         </div>
@@ -2805,7 +2832,7 @@ async function doExportPDF(isLandscape) {
     const card = document.getElementById('card-' + d.id);
     if (card && card.classList.contains('card-hidden')) return '';
     const title = escapeHtml(txt(`${d.id}-title`) || Tx(d.title));
-    const meta = escapeHtml(txt(`${d.id}-meta`) || Tx(d.meta));
+    const meta = escapeHtml(txt(`${d.id}-meta`) || dayMetaCombined(d));
     const desc = escapeHtml(txt(`${d.id}-desc`) || Tx(d.desc));
 
     const tlHtml = d.timeline
@@ -2830,7 +2857,7 @@ async function doExportPDF(isLandscape) {
 
     return `<div class="day">
       <div class="day-hdr">
-        <div class="day-num"><span>${escapeHtml(Tx(d.day))}</span><strong>${escapeHtml(Tx(d.date))}</strong><span>${escapeHtml(daySeqLabel(d.num))}</span></div>
+        <div class="day-num"><span>${escapeHtml(Tx(d.day))}</span><strong>${escapeHtml(dayCalendarLabel(d))}</strong><span>${escapeHtml(daySeqLabel(d.num))}</span></div>
         <div class="day-info"><div class="day-ttl">${title}</div><div class="day-meta">${meta}</div></div>
       </div>
       <div class="day-body">
