@@ -3883,22 +3883,115 @@ window.addEventListener('DOMContentLoaded', () => {
 // ═══════════════════════════════════════
 // ONBOARDING & WHAT'S NEW
 // ═══════════════════════════════════════
+const ONBOARD_STEP_COUNT = 4;
+let onboardStep = 0;
+let onboardLangChosen = false;
+
+function renderOnboardStep() {
+  const pill = document.getElementById('onboardPill');
+  if (pill) pill.textContent = `${onboardStep + 1} / ${ONBOARD_STEP_COUNT}`;
+
+  document.querySelectorAll('.onboard-step').forEach(el => {
+    const n = parseInt(el.getAttribute('data-onboard-step') || '0', 10);
+    const active = n === onboardStep;
+    el.classList.toggle('active', active);
+    el.hidden = !active;
+  });
+
+  const back = document.getElementById('onboardBack');
+  const next = document.getElementById('onboardNext');
+  if (back) back.hidden = onboardStep === 0;
+  if (next) {
+    const finish = onboardStep === ONBOARD_STEP_COUNT - 1;
+    next.textContent = Ui(finish ? 'onboard.finish' : 'onboard.next');
+    next.disabled = onboardStep === 0 && !onboardLangChosen;
+  }
+  updateOnboardLangButtons();
+  syncModalScrollLock();
+}
+
+function updateOnboardLangButtons() {
+  document.querySelectorAll('[data-onboard-lang]').forEach(btn => {
+    const l = btn.getAttribute('data-onboard-lang');
+    btn.classList.toggle('onboard-lang-btn--active', onboardLangChosen && l === APP_LANG);
+    btn.setAttribute('aria-pressed', onboardLangChosen && l === APP_LANG ? 'true' : 'false');
+  });
+}
+
+function openOnboardingWizard(startStep = 0) {
+  if (isAlreadyInstalledWebApp() && startStep === ONBOARD_STEP_COUNT - 1) {
+    finishOnboarding();
+    return;
+  }
+  onboardStep = Math.max(0, Math.min(startStep, ONBOARD_STEP_COUNT - 1));
+  try {
+    onboardLangChosen = !!localStorage.getItem(LANG_KEY);
+  } catch (_) {
+    onboardLangChosen = false;
+  }
+  const modal = document.getElementById('onboardingModal');
+  if (!modal) return;
+  renderOnboardStep();
+  modal.classList.add('open');
+}
+
+function pickOnboardLang(lang) {
+  setTripLang(lang);
+  onboardLangChosen = true;
+  const next = document.getElementById('onboardNext');
+  if (next) next.disabled = false;
+  updateOnboardLangButtons();
+}
+
+function onboardNextClick() {
+  if (onboardStep === 0 && !onboardLangChosen) return;
+  if (onboardStep === ONBOARD_STEP_COUNT - 2 && isAlreadyInstalledWebApp()) {
+    finishOnboarding();
+    return;
+  }
+  if (onboardStep >= ONBOARD_STEP_COUNT - 1) {
+    finishOnboarding();
+    return;
+  }
+  onboardStep += 1;
+  if (onboardStep === ONBOARD_STEP_COUNT - 1 && isAlreadyInstalledWebApp()) {
+    finishOnboarding();
+    return;
+  }
+  renderOnboardStep();
+}
+
+function onboardBackClick() {
+  if (onboardStep <= 0) return;
+  onboardStep -= 1;
+  renderOnboardStep();
+}
+
+function finishOnboarding() {
+  document.getElementById('onboardingModal')?.classList.remove('open');
+  try {
+    localStorage.setItem('tripWelcomeSeen', '1');
+    localStorage.setItem(ADD_TO_HOME_DISMISSED_KEY, '1');
+    if (APP_VERSION) localStorage.setItem('tripLastSeenVersion', APP_VERSION);
+  } catch (_) {}
+  syncModalScrollLock();
+}
+
+window.pickOnboardLang = pickOnboardLang;
+window.onboardNextClick = onboardNextClick;
+window.onboardBackClick = onboardBackClick;
+
 function maybeShowOnboarding() {
   if (APP_VERSION == null || !VERSIONS || !Array.isArray(VERSIONS)) return;
   const welcomed = localStorage.getItem('tripWelcomeSeen');
   const lastSeen = localStorage.getItem('tripLastSeenVersion');
 
   if (!welcomed) {
-    // Brand new visitor — show welcome, mark both flags
-    localStorage.setItem('tripWelcomeSeen', '1');
-    localStorage.setItem('tripLastSeenVersion', APP_VERSION);
-    setTimeout(() => document.getElementById('welcomeModal').classList.add('open'), 600);
+    setTimeout(() => openOnboardingWizard(0), 600);
   } else if (lastSeen !== APP_VERSION) {
-    // Returning visitor seeing a new version
     localStorage.setItem('tripLastSeenVersion', APP_VERSION);
     setTimeout(() => openWhatsNewModal(), 600);
   }
-  scheduleAddToHomeHintAfterOnboarding();
 }
 
 function isAlreadyInstalledWebApp() {
@@ -3912,34 +4005,15 @@ function isAlreadyInstalledWebApp() {
 
 function otherOnboardingModalOpen() {
   return (
-    document.getElementById('welcomeModal')?.classList.contains('open') ||
+    document.getElementById('onboardingModal')?.classList.contains('open') ||
     document.getElementById('whatsNewModal')?.classList.contains('open') ||
     document.getElementById('conflictModal')?.classList.contains('open')
   );
 }
 
-function scheduleAddToHomeHintAfterOnboarding() {
-  const tryOpen = () => {
-    try {
-      if (localStorage.getItem(ADD_TO_HOME_DISMISSED_KEY)) return;
-      if (isAlreadyInstalledWebApp()) return;
-      if (otherOnboardingModalOpen()) {
-        setTimeout(tryOpen, 340);
-        return;
-      }
-      const el = document.getElementById('addToHomeModal');
-      if (!el || el.classList.contains('open')) return;
-      el.classList.add('open');
-    } catch (e) {}
-  };
-  setTimeout(tryOpen, 720);
-}
-
+/** @deprecated kept for any stale onclick handlers */
 function dismissAddToHomeHint() {
-  try {
-    localStorage.setItem(ADD_TO_HOME_DISMISSED_KEY, '1');
-  } catch (e) {}
-  document.getElementById('addToHomeModal')?.classList.remove('open');
+  finishOnboarding();
 }
 
 window.dismissAddToHomeHint = dismissAddToHomeHint;
