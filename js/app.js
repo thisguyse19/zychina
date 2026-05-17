@@ -2,7 +2,11 @@
 
 let APP_VERSION;
 let VERSIONS;
-let DAYS_CQ, DAYS_XJ;
+let DAYS_CQ, DAYS_XJ1, DAYS_XJ2;
+
+function allItineraryDays() {
+  return [...(DAYS_CQ || []), ...(DAYS_XJ1 || []), ...(DAYS_XJ2 || [])];
+}
 let STAYS, CHECKLIST, CL_META, COSTS, TIPS;
 let TRIP_META = {};
 let MAPS_DATA = {};
@@ -136,7 +140,8 @@ function refreshLangSidebarToggle() {
 
 function rerenderTripText() {
   renderDays(DAYS_CQ, 'days-cq');
-  renderDays(DAYS_XJ, 'days-xj');
+  renderDays(DAYS_XJ1, 'days-xj1');
+  renderDays(DAYS_XJ2, 'days-xj2');
   renderStays();
   renderCostTable();
   renderTips();
@@ -211,7 +216,7 @@ function refreshFlightModalI18n() {
 
 function formatSidebarBadgeSub(tm) {
   const days =
-    tm && tm.totalDays != null ? String(tm.totalDays) : String((DAYS_CQ || []).length + (DAYS_XJ || []).length);
+    tm && tm.totalDays != null ? String(tm.totalDays) : String(allItineraryDays().length);
   const people = tm && tm.groupSize != null ? String(tm.groupSize) : '4';
   let s = Ui('badge.sub');
   return s.replace(/\{days\}/g, days).replace(/\{people\}/g, people);
@@ -359,12 +364,15 @@ async function loadTripData() {
       : Array.isArray(d.itinerary && d.itinerary.cq)
       ? d.itinerary.cq
       : [];
-  DAYS_XJ =
-    Array.isArray(d.itinerary && d.itinerary.xinjiang)
-      ? d.itinerary.xinjiang
-      : Array.isArray(d.itinerary && d.itinerary.xj)
-      ? d.itinerary.xj
-      : [];
+  const itin = d.itinerary || {};
+  if (Array.isArray(itin.xinjiangNorth) || Array.isArray(itin.xinjiangSouth)) {
+    DAYS_XJ1 = Array.isArray(itin.xinjiangNorth) ? itin.xinjiangNorth : [];
+    DAYS_XJ2 = Array.isArray(itin.xinjiangSouth) ? itin.xinjiangSouth : [];
+  } else {
+    const legacyXj = Array.isArray(itin.xinjiang) ? itin.xinjiang : Array.isArray(itin.xj) ? itin.xj : [];
+    DAYS_XJ1 = legacyXj;
+    DAYS_XJ2 = [];
+  }
   STAYS = d.stays || [];
   CHECKLIST = d.checklist || [];
   CL_META = d.clMeta || {};
@@ -1802,7 +1810,7 @@ function saveHistory(h) {
 // ═══════════════════════════════════════
 // CHECKLIST SORTING / GROUPING
 // ═══════════════════════════════════════
-let clSort = 'urgency';
+let clSort = 'date';
 
 function localizePlannerCategory(cat) {
   if (APP_LANG !== 'zh') return cat;
@@ -1821,17 +1829,29 @@ function localizePlannerCategory(cat) {
   return map[cat] || cat;
 }
 
-const CL_SORT_MODES = ['urgency', 'category', 'city', 'status'];
+const CL_SORT_MODES = ['urgency', 'category', 'date', 'city', 'status'];
 
 function loadClSortPreference() {
   try {
-    let s = localStorage.getItem(CL_SORT_KEY);
-    if (s === 'date') {
-      s = 'city';
-      localStorage.setItem(CL_SORT_KEY, 'city');
-    }
+    const s = localStorage.getItem(CL_SORT_KEY);
     if (s && CL_SORT_MODES.includes(s)) clSort = s;
   } catch (_) { /* ignore */ }
+}
+
+function formatChecklistTripDate(iso) {
+  if (!iso || typeof iso !== 'string') return Ui('checklist.date.unscheduled') || 'Unscheduled';
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(iso.trim());
+  if (!m) return iso;
+  const y = parseInt(m[1], 10);
+  const mo = parseInt(m[2], 10);
+  const da = parseInt(m[3], 10);
+  const wdEn = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const wdZh = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+  const dt = new Date(Date.UTC(y, mo - 1, da));
+  const wd = dt.getUTCDay();
+  const monthsEn = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  if (APP_LANG === 'zh') return `${mo}月${da}日 · ${wdZh[wd]}`;
+  return `${wdEn[wd]} ${monthsEn[mo - 1]} ${da}`;
 }
 
 function syncClSortButtons() {
@@ -1909,6 +1929,31 @@ function getChecklistGroups() {
         items,
       };
     });
+  }
+  if (clSort === 'date') {
+    const dated = allItems.filter(it => metaFor(it.id).tripDate);
+    const undated = allItems.filter(it => !metaFor(it.id).tripDate);
+    const dates = [...new Set(dated.map(it => metaFor(it.id).tripDate))].sort();
+    const groups = dates.map(dateIso => {
+      const items = dated.filter(it => metaFor(it.id).tripDate === dateIso);
+      return {
+        id: `date-${dateIso}`,
+        label: formatChecklistTripDate(dateIso),
+        sub: checklistItemWord(items.length),
+        color: '#5856d6',
+        items,
+      };
+    });
+    if (undated.length) {
+      groups.push({
+        id: 'date-none',
+        label: Ui('checklist.date.unscheduled') || 'Unscheduled',
+        sub: checklistItemWord(undated.length),
+        color: '#636366',
+        items: undated,
+      });
+    }
+    return groups;
   }
   if (clSort === 'city') {
     const cityOrder = { pre: 0, cq: 1, xj: 2 };
@@ -2352,7 +2397,7 @@ function showPage(id, btn) {
   if(id === 'budget') setTimeout(initCharts, 100);
   if ((id === 'overview' || id === 'cq') && window._mapCQ)
     setTimeout(() => window._mapCQ.invalidateSize(), 50);
-  if ((id === 'overview' || id === 'xj') && window._mapXJ)
+  if ((id === 'overview' || id === 'xj1' || id === 'xj2') && window._mapXJ)
     setTimeout(() => window._mapXJ.invalidateSize(), 50);
   normalizeBodyScroll();
 }
@@ -2564,7 +2609,8 @@ function confirmRevert() {
 
 function doRevertAll() {
   renderDays(DAYS_CQ, 'days-cq');
-  renderDays(DAYS_XJ, 'days-xj');
+  renderDays(DAYS_XJ1, 'days-xj1');
+  renderDays(DAYS_XJ2, 'days-xj2');
   renderStays();
   renderCostTable();
   renderTips();
@@ -2733,7 +2779,7 @@ async function doExportPDF(isLandscape) {
   try {
   const [mapCqUrl, mapXjUrl] = await Promise.all([
     captureMap('map-cq', 'page-overview', window._mapCQ),
-    captureMap('map-xj', 'page-xj', window._mapXJ),
+    captureMap('map-xj', 'page-overview', window._mapXJ),
   ]);
 
   toast.textContent = Ui('flight.buildPdf');
@@ -2744,8 +2790,9 @@ async function doExportPDF(isLandscape) {
     return el ? el.innerText.trim() : '';
   }
 
-  const allDays = [...DAYS_CQ, ...DAYS_XJ];
+  const allDays = allItineraryDays();
   const cqCount = DAYS_CQ.length;
+  const xj1Count = DAYS_XJ1.length;
   const tmPdf = TRIP_META || {};
   const daysPdfStr = String(tmPdf.totalDays != null ? tmPdf.totalDays : allDays.length);
   const gsPdfStr = String(tmPdf.groupSize != null ? tmPdf.groupSize : 4);
@@ -2857,7 +2904,8 @@ async function doExportPDF(isLandscape) {
   }
 
   const cqPdf = allDays.slice(0, cqCount).map(buildDayHtml).join('');
-  const xjPdf = allDays.slice(cqCount).map(buildDayHtml).join('');
+  const xjNorthPdf = allDays.slice(cqCount, cqCount + xj1Count).map(buildDayHtml).join('');
+  const xjSouthPdf = allDays.slice(cqCount + xj1Count).map(buildDayHtml).join('');
   const staysHtml = STAYS.map(buildStayHtml).join('');
   const costRows  = buildCostRowsPdf();
   const tipsHtml  = TIPS.map(buildTipHtmlPdf).join('');
@@ -2976,7 +3024,11 @@ ${cqPdf}
   <div class="tag">${pdfTx('secXjTag')}</div>
   <h2>${pdfTx('secXjTitle')}</h2>
 </div>
-${xjPdf}
+${xjNorthPdf}
+${xjSouthPdf ? `<div class="sec">
+  <div class="tag">${pdfTx('secXjSouthTag')}</div>
+  <h2>${pdfTx('secXjSouthTitle')}</h2>
+</div>${xjSouthPdf}` : ''}
 
 <div class="sec">
   <div class="tag">${pdfTx('staysTag')}</div>
@@ -3235,7 +3287,8 @@ function saveConflictChoices() {
 function init() {
   seedOverviewFromPageSeed();
   renderDays(DAYS_CQ, 'days-cq');
-  renderDays(DAYS_XJ, 'days-xj');
+  renderDays(DAYS_XJ1, 'days-xj1');
+  renderDays(DAYS_XJ2, 'days-xj2');
   renderStays();
   renderCostTable();
   renderTips();
@@ -3272,7 +3325,7 @@ function captureDomDefaultsFromDom() {
 function seedOverviewFromPageSeed() {
   const ov = PAGE_SEED && PAGE_SEED.overview;
   const tm = TRIP_META || {};
-  const days = tm.totalDays != null ? String(tm.totalDays) : String((DAYS_CQ || []).length + (DAYS_XJ || []).length);
+  const days = tm.totalDays != null ? String(tm.totalDays) : String(allItineraryDays().length);
   const people = tm.groupSize != null ? String(tm.groupSize) : '4';
   const drive = Tx(tm.statDrivingKmApprox || '');
   const bud = Tx(tm.statBudgetApprox || '');

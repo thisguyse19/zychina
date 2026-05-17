@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>Planner · Chongqing & Xinjiang</title>
-<meta name="description" content="Bilingual private trip planner — Chongqing & Xinjiang (CN¥)">
+<title>Planner · Xinjiang! Jun 11–23</title>
+<meta name="description" content="Bilingual private trip planner — Xinjiang road trip Jun 11–23, 2026 (CN¥)">
 <meta name="theme-color" content="#0a1c3e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -41,7 +41,7 @@
 <div id="auth-overlay">
   <div class="auth-card">
     <div class="auth-logo">🀄🏔</div>
-    <div class="auth-title"><span class="trip-lng trip-lng--en">Chongqing &amp; Xinjiang</span><span class="trip-lng trip-lng--zh" hidden>重庆 · 新疆</span></div>
+    <div class="auth-title"><span class="trip-lng trip-lng--en">Xinjiang!</span><span class="trip-lng trip-lng--zh" hidden>新疆！</span></div>
     <div class="auth-sub" data-ui="auth.sub"></div>
     <label class="auth-label" for="auth-input" data-ui="auth.password"></label>
     <input id="auth-input" class="auth-input" type="password" data-ui="auth.placeholder" placeholder="" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAuth()">
@@ -63,8 +63,8 @@
     <span></span><span></span><span></span>
   </button>
   <div class="mobile-header-title">
-    <span class="trip-lng trip-lng--en">CQ · Xinjiang Planner</span>
-    <span class="trip-lng trip-lng--zh" hidden>重庆 · 新疆行程簿</span>
+    <span class="trip-lng trip-lng--en">Xinjiang! Planner</span>
+    <span class="trip-lng trip-lng--zh" hidden>新疆！行程簿</span>
   </div>
   <div class="mobile-header-actions">
     <button type="button" class="mobile-header-pdf" onclick="exportPDF()" aria-label="Export PDF" data-ui-tools="tools.pdf"></button>
@@ -84,8 +84,8 @@
   <div class="sb-header">
     <div class="trip-badge" data-trip-badge></div>
     <div class="sb-title">
-      <span class="trip-lng trip-lng--en">Chongqing &amp;<br>Xinjiang</span>
-      <span class="trip-lng trip-lng--zh" hidden>重庆<br>新疆</span>
+      <span class="trip-lng trip-lng--en">Xinjiang!<br>Jun 11–23</span>
+      <span class="trip-lng trip-lng--zh" hidden>新疆！<br>6月11–23</span>
     </div>
     <div class="sb-sub" data-trip-sb-sub></div>
     <div class="lang-toggle" role="group" aria-label="Language">
@@ -108,7 +108,8 @@
   <div class="nav-group">
     <div class="nav-label" data-ui="nav.labels.city"></div>
     <button class="nav-item" onclick="showPage('cq',this)"><div class="nav-icon">🏙</div><span data-ui="nav.cq.days"></span></button>
-    <button class="nav-item" onclick="showPage('xj',this)"><div class="nav-icon">🏜</div><span data-ui="nav.xj.days"></span></button>
+    <button class="nav-item" onclick="showPage('xj1',this)"><div class="nav-icon">🛣</div><span data-ui="nav.xj1.days"></span></button>
+    <button class="nav-item" onclick="showPage('xj2',this)"><div class="nav-icon">🏔</div><span data-ui="nav.xj2.days"></span></button>
   </div>
   <div class="nav-group">
     <div class="nav-label" data-ui="nav.planning"></div>
@@ -177,30 +178,28 @@
     <div class="sec-header">
       <div class="sec-tag" data-ui="overview.routeTag"></div>
       <h2 class="sec-title" data-ui="overview.journeyTitle"></h2>
-      <p class="sec-sub"><span class="trip-lng trip-lng--en">Use the Chongqing transit stack for riverfront nights and short rail hops, then treat Ürümqi as the logistics hub before dropping into desert heat near Turpan. Dates slide in later — this layout already groups ideas by region.</span><span class="trip-lng trip-lng--zh" hidden>先在重庆用轨交与高差步道消化夜景火锅，再以乌鲁木齐作为北疆跳板，最后用吐鲁番的干热绿洲收束节奏。日历稍后加入 —— 目前已经按片区整理思路。</span></p>
-      <p style="margin-top:8px;font-size:13px;color:var(--text-sec);line-height:1.65"><span class="trip-lng trip-lng--en">When departure and return calendars are finalized, flip <code>start</code> / <code>end</code> in <code>tripCountdown</code> inside JSON — the banner and exports pick them up automatically.</span><span class="trip-lng trip-lng--zh" hidden>确定出发日与返程日后，只要在 JSON 的 <code>tripCountdown</code> 填入 <code>start</code> / <code>end</code>，横幅与导出页会自动切换倒计时模式。</span></p>
+      <p class="sec-sub"><span class="trip-lng trip-lng--en">13 days from Singapore via Chongqing into a Duku Highway loop — 14 cities and 24 pinned sights from your route card. Sidebar sections follow calendar dates (Jun 11–13 · 14–19 · 20–23).</span><span class="trip-lng trip-lng--zh" hidden>新加坡经重庆入疆，独库公路环线共13天、14城、24处行程点。侧栏按出行日期分段（6月11–13 · 14–19 · 20–23）。</span></p>
     </div>
 
     <div class="two-col">
       <div class="wb">
-        <span class="lbl"><span class="trip-lng trip-lng--en">Chongqing corridor</span><span class="trip-lng trip-lng--zh" hidden>重庆轴线</span></span>
+        <span class="lbl"><span class="trip-lng trip-lng--en">Jun 11–13 · Chongqing</span><span class="trip-lng trip-lng--zh" hidden>6月11–13 · 重庆</span></span>
         <div class="route-bar">
-          <span class="route-stop">CBD</span><span class="route-arrow">→</span>
-          <span class="route-stop"><span class="trip-lng trip-lng--en">Riverside neon</span><span class="trip-lng trip-lng--zh" hidden>江畔夜景</span></span><span class="route-arrow">→</span>
-          <span class="route-stop"><span class="trip-lng trip-lng--en">Ciqikou</span><span class="trip-lng trip-lng--zh" hidden>磁器口</span></span><span class="route-arrow">→</span>
-          <span class="route-stop"><span class="trip-lng trip-lng--en">Karst day arc</span><span class="trip-lng trip-lng--zh" hidden>武隆喀斯特</span></span><span class="route-arrow">→</span>
-          <span class="route-stop">✈ ✕</span>
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Singapore</span><span class="trip-lng trip-lng--zh" hidden>新加坡</span></span><span class="route-arrow">→</span>
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Chongqing</span><span class="trip-lng trip-lng--zh" hidden>重庆</span></span><span class="route-arrow">→</span>
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Atour Hotel</span><span class="trip-lng trip-lng--zh" hidden>亚朵酒店</span></span><span class="route-arrow">→</span>
+          <span class="route-stop">✈ <span class="trip-lng trip-lng--en">Ürümqi</span><span class="trip-lng trip-lng--zh" hidden>乌鲁木齐</span></span>
         </div>
         <p class="capt" id="overview-route-cq-caption" style="font-size:13px;color:var(--text-sec);margin-top:10px;line-height:1.6"></p>
       </div>
       <div class="wb">
-        <span class="lbl"><span class="trip-lng trip-lng--en">Xinjiang sampler</span><span class="trip-lng trip-lng--zh" hidden>新疆速写弧</span></span>
+        <span class="lbl"><span class="trip-lng trip-lng--en">Jun 14–23 · Xinjiang loop</span><span class="trip-lng trip-lng--zh" hidden>6月14–23 · 新疆环线</span></span>
         <div class="route-bar">
           <span class="route-stop"><span class="trip-lng trip-lng--en">Ürümqi</span><span class="trip-lng trip-lng--zh" hidden>乌鲁木齐</span></span><span class="route-arrow">→</span>
-          <span class="route-stop"><span class="trip-lng trip-lng--en">Tianshan Lake</span><span class="trip-lng trip-lng--zh" hidden>天池</span></span><span class="route-arrow">→</span>
-          <span class="route-stop"><span class="trip-lng trip-lng--en">Turpan</span><span class="trip-lng trip-lng--zh" hidden>吐鲁番</span></span><span class="route-arrow">→</span>
-          <span class="route-stop"><span class="trip-lng trip-lng--en">Buffer</span><span class="trip-lng trip-lng--zh" hidden>缓冲日</span></span><span class="route-arrow">→</span>
-          <span class="route-stop">✈</span>
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Duku / Kuytun</span><span class="trip-lng trip-lng--zh" hidden>独库/奎屯</span></span><span class="route-arrow">→</span>
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Tekes · Zhaosu</span><span class="trip-lng trip-lng--zh" hidden>特克斯·昭苏</span></span><span class="route-arrow">→</span>
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Sayram Lake</span><span class="trip-lng trip-lng--zh" hidden>赛里木湖</span></span><span class="route-arrow">→</span>
+          <span class="route-stop">✈ <span class="trip-lng trip-lng--en">SIN</span><span class="trip-lng trip-lng--zh" hidden>新加坡</span></span>
         </div>
         <p class="capt" id="overview-route-xj-caption" style="font-size:13px;color:var(--text-sec);margin-top:10px;line-height:1.6"></p>
       </div>
@@ -209,10 +208,10 @@
     <div class="wb" style="margin-top:16px">
       <span class="lbl" data-ui="overview.highlightsLbl"></span>
       <div class="act-list">
-        <div class="act-item"><div class="act-icon">🌶</div><div><div class="act-name"><span class="trip-lng trip-lng--en">Summit hotpot labs</span><span class="trip-lng trip-lng--zh" hidden>山顶与江岸火锅实验场</span></div><div class="act-desc"><span class="trip-lng trip-lng--en">Night breeze + spice fog — book river-view tables when friends visit peak season.</span><span class="trip-lng trip-lng--zh" hidden>江风与辣雾共生，旺季记得抢临江位。</span></div></div></div>
-        <div class="act-item"><div class="act-icon">🚡</div><div><div class="act-name"><span class="trip-lng trip-lng--en">Yangtze ropeway hop</span><span class="trip-lng trip-lng--zh" hidden>长江索道跨江</span></div><div class="act-desc"><span class="trip-lng trip-lng--en">Classic skyline cut — pair with a late stroll through Hongyadong tiers.</span><span class="trip-lng trip-lng--zh" hidden>城市天际线一切割，接洪崖洞层层灯火。</span></div></div></div>
-        <div class="act-item"><div class="act-icon">🏔</div><div><div class="act-name"><span class="trip-lng trip-lng--en">Heavenly Lake ridgeline</span><span class="trip-lng trip-lng--zh" hidden>天池雪岭走廊</span></div><div class="act-desc"><span class="trip-lng trip-lng--en">Forest-line bus switchbacks then alpine wind — pack layers even in summer.</span><span class="trip-lng trip-lng--zh" hidden>夏季也要备防风保暖，景区巴士弯多易晕。</span></div></div></div>
-        <div class="act-item"><div class="act-icon">🏜</div><div><div class="act-name"><span class="trip-lng trip-lng--en">Turpan Karez cool</span><span class="trip-lng trip-lng--zh" hidden>吐鲁番坎儿井清凉</span></div><div class="act-desc"><span class="trip-lng trip-lng--en">Desert heat outside, underground breeze inside — ideal afternoon reset.</span><span class="trip-lng trip-lng--zh" hidden>地表炙热、井下沁凉，适合安排午后避暑。</span></div></div></div>
+        <div class="act-item"><div class="act-icon">🛣</div><div><div class="act-name"><span class="trip-lng trip-lng--en">Duku Highway &amp; Anjihai</span><span class="trip-lng trip-lng--zh" hidden>独库公路与安集海大峡谷</span></div><div class="act-desc"><span class="trip-lng trip-lng--en">Baili Danxia deck, S101 camp, canyon rim — Jun 15–16 on your route card.</span><span class="trip-lng trip-lng--zh" hidden>百里丹霞观景台、S101营地、安集海 — 行程图6月15–16日。</span></div></div></div>
+        <div class="act-item"><div class="act-icon">☯️</div><div><div class="act-name"><span class="trip-lng trip-lng--en">Tekes Bagua City &amp; Kalajun</span><span class="trip-lng trip-lng--zh" hidden>特克斯八卦城与喀拉峻</span></div><div class="act-desc"><span class="trip-lng trip-lng--en">Octagonal street grid plus grassland ridges — Jun 17–18.</span><span class="trip-lng trip-lng--zh" hidden>八卦城街巷与草原画廊 — 6月17–18日。</span></div></div></div>
+        <div class="act-item"><div class="act-icon">🥾</div><div><div class="act-name"><span class="trip-lng trip-lng--en">Xiata &amp; Jade Lake</span><span class="trip-lng trip-lng--zh" hidden>夏塔古道与昭苏玉湖</span></div><div class="act-desc"><span class="trip-lng trip-lng--en">Ancient road forest park and high lake colour — Jun 19–20.</span><span class="trip-lng trip-lng--zh" hidden>夏塔国家森林公园与玉湖 — 6月19–20日。</span></div></div></div>
+        <div class="act-item"><div class="act-icon">🌊</div><div><div class="act-name"><span class="trip-lng trip-lng--en">Sayram Lake</span><span class="trip-lng trip-lng--zh" hidden>赛里木湖</span></div><div class="act-desc"><span class="trip-lng trip-lng--en">Alpine lake loop — Jun 21, then Ürümqi buffer and flights home Jun 22–23.</span><span class="trip-lng trip-lng--zh" hidden>赛湖环湖 — 6月21日，22日返乌市、23日经重庆回新加坡。</span></div></div></div>
       </div>
     </div>
   </div>
@@ -259,9 +258,9 @@
     <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1600&q=80" alt="" onerror="this.src='https://images.unsplash.com/photo-1577083555083-9247cdd35b9c?w=1600&q=80'">
     <div class="hero-overlay">
       <div class="hero-content">
-        <div class="hero-tag"><span class="trip-lng trip-lng--en">Chongqing · city leg</span><span class="trip-lng trip-lng--zh" hidden>重庆 · 城市段</span></div>
-        <h1 class="hero-title"><span class="trip-lng trip-lng--en">Fog, spice &amp; vertical streets</span><span class="trip-lng trip-lng--zh" hidden>雾都辣香与立体街区</span></h1>
-        <p class="hero-sub"><span class="trip-lng trip-lng--en">Dense rail mesh, river gorges of neon, and punchy day trips when legs feel fresh.</span><span class="trip-lng trip-lng--zh" hidden>轨道成网、江岸霓虹冲霄，腿脚允许时穿插喀斯特或古镇日归。</span></p>
+        <div class="hero-tag"><span class="trip-lng trip-lng--en">Jun 11–13 · Chongqing</span><span class="trip-lng trip-lng--zh" hidden>6月11–13 · 重庆</span></div>
+        <h1 class="hero-title"><span class="trip-lng trip-lng--en">Singapore link &amp; Atour nights</span><span class="trip-lng trip-lng--zh" hidden>新加坡衔接与亚朵酒店</span></h1>
+        <p class="hero-sub"><span class="trip-lng trip-lng--en">Jun 11 SIN→CKG, Jun 12 Atour Hotel (Huanshan Park / Jiangbei), Jun 13 fly to Ürümqi — per route card.</span><span class="trip-lng trip-lng--zh" hidden>6月11日新加坡—重庆，12日亚朵酒店（环山公园/江北），13日飞乌鲁木齐 — 行程图一致。</span></p>
       </div>
     </div>
   </div>
@@ -270,19 +269,35 @@
   </div>
 </section>
 
-<section id="page-xj" class="page">
+<section id="page-xj1" class="page">
   <div class="hero">
-    <img src="https://images.unsplash.com/photo-1526481280695-074c716a8e71?w=1600&q=80" alt="" onerror="this.src='https://images.unsplash.com/photo-1507608616759-54f48f0af7ee?w=1600&q=80'">
+    <img src="https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=1600&q=80" alt="" onerror="this.style.display='none'">
     <div class="hero-overlay">
       <div class="hero-content">
-        <div class="hero-tag"><span class="trip-lng trip-lng--en">Xinjiang · region leg</span><span class="trip-lng trip-lng--zh" hidden>新疆 · 区域段</span></div>
-        <h1 class="hero-title"><span class="trip-lng trip-lng--en">High plateaus &amp; desert orchards</span><span class="trip-lng trip-lng--zh" hidden>高原风口与绿洲果园</span></h1>
-        <p class="hero-sub"><span class="trip-lng trip-lng--en">Capital logistics, alpine lake air, then Turpan’s blast-furnace plains — shuffle if flights hiccup.</span><span class="trip-lng trip-lng--zh" hidden>首府集散、天池换肺，再到吐鲁番火洲，航班波动时可重排。</span></p>
+        <div class="hero-tag"><span class="trip-lng trip-lng--en">Jun 14–19 · Duku corridor</span><span class="trip-lng trip-lng--zh" hidden>6月14–19 · 独库走廊</span></div>
+        <h1 class="hero-title"><span class="trip-lng trip-lng--en">Danxia, Duku passes &amp; grasslands</span><span class="trip-lng trip-lng--zh" hidden>丹霞、独库垭口与草原</span></h1>
+        <p class="hero-sub"><span class="trip-lng trip-lng--en">Ürümqi through Kuytun, Nalati, Tekes, Kalajun, and Xiata — route-card sights.</span><span class="trip-lng trip-lng--zh" hidden>乌鲁木齐—奎屯—那拉提—特克斯—喀拉峻—夏塔，行程图景点。</span></p>
       </div>
     </div>
   </div>
   <div class="section" style="padding-top:32px">
-    <div class="day-list" id="days-xj"></div>
+    <div class="day-list" id="days-xj1"></div>
+  </div>
+</section>
+
+<section id="page-xj2" class="page">
+  <div class="hero">
+    <img src="https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=1600&q=80" alt="" onerror="this.style.display='none'">
+    <div class="hero-overlay">
+      <div class="hero-content">
+        <div class="hero-tag"><span class="trip-lng trip-lng--en">Jun 20–23 · South &amp; home</span><span class="trip-lng trip-lng--zh" hidden>6月20–23 · 南线返程</span></div>
+        <h1 class="hero-title"><span class="trip-lng trip-lng--en">Jade Lake, Sayram &amp; homeward flights</span><span class="trip-lng trip-lng--zh" hidden>玉湖、赛湖与返程航班</span></h1>
+        <p class="hero-sub"><span class="trip-lng trip-lng--en">Jade Lake, Yining, Sayram, Ürümqi buffer, URC → CKG → SIN Jun 23.</span><span class="trip-lng trip-lng--zh" hidden>玉湖、伊宁、赛湖、返乌市，6月23日经重庆回新加坡。</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="section" style="padding-top:32px">
+    <div class="day-list" id="days-xj2"></div>
   </div>
 </section>
 
@@ -293,7 +308,7 @@
       <div class="hero-content">
         <div class="hero-tag"><span class="trip-lng trip-lng--en">Stays</span><span class="trip-lng trip-lng--zh" hidden>住宿</span></div>
         <h1 class="hero-title"><span class="trip-lng trip-lng--en">Where to sleep</span><span class="trip-lng trip-lng--zh" hidden>落脚建议</span></h1>
-        <p class="hero-sub"><span class="trip-lng trip-lng--en">Whole-apartment picks around Jiefangbei, riverside towers, Ürümqi hubs, and Turpan courtyards — prices are CN¥ ballparks.</span><span class="trip-lng trip-lng--zh" hidden>解放碑、滨江、乌市枢纽与吐鲁番合院式公寓为主，标价为人民币估算。</span></p>
+        <p class="hero-sub"><span class="trip-lng trip-lng--en">Nine route-card properties from Atour Chongqing through Qiufeng Bole — CN¥ ballparks for planning.</span><span class="trip-lng trip-lng--zh" hidden>行程图九处住宿：重庆亚朵、仟疆集、M·棉、民宿至博乐秋枫 — 人民币估算。</span></p>
       </div>
     </div>
   </div>
@@ -389,8 +404,9 @@
   </div>
   <div class="section" style="padding-top:0">
     <div class="cl-sort-bar">
-      <button class="cl-sort-btn active" data-sort="urgency"  onclick="setClSort('urgency')"><span data-ui="checklist.sort.urgency"></span></button>
+      <button class="cl-sort-btn" data-sort="urgency" onclick="setClSort('urgency')"><span data-ui="checklist.sort.urgency"></span></button>
       <button class="cl-sort-btn"        data-sort="category" onclick="setClSort('category')"><span data-ui="checklist.sort.category"></span></button>
+      <button class="cl-sort-btn active" data-sort="date" onclick="setClSort('date')"><span data-ui="checklist.sort.date"></span></button>
       <button class="cl-sort-btn"        data-sort="city" onclick="setClSort('city')"><span data-ui="checklist.sort.city"></span></button>
       <button class="cl-sort-btn"        data-sort="status" onclick="setClSort('status')"><span data-ui="checklist.sort.status"></span></button>
     </div>
