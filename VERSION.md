@@ -1,6 +1,6 @@
 # CQ–XJ Planner — version history
 
-**Shipped app version:** `1.0.0` (must match `content/trip-data.json` → `appVersion`).
+**Shipped app version:** `1.1.0` (must match `content/trip-data.json` → `appVersion`).
 
 This file lists every shipped version from newest to oldest. The **source of truth** is `content/trip-data.json` → `versions` (same strings power the in-app changelog, sidebar version pill, and “What’s new”).
 
@@ -12,13 +12,18 @@ node scripts/generate-version-md.mjs
 
 ---
 
-## 1.0.0 — 2026-05-17 **· current release**
+## 1.0.0 — 2026-05-17
 
 ### Chongqing & Xinjiang relaunch — bilingual planner
 
-- Full itinerary retarget to Chongqing and Xinjiang — city-based itinerary sections instead of Tasmania/Melbourne
-- 简体中文 / English language toggle persisted in sidebar and backups
-- Checklist grouping by city/region replaces travel-date grouping (dates kept ready in trip countdown for future use)
-- Maps, budget (CN¥), accommodations, flights seed, tips, and copy aligned for travel in mainland China
-- New app versioning series starting at 1.0.0; service worker cache id refreshed separately in sw.js
+- Initial China fork with city-based draft days.
+
+## 1.1.0 — 2026-05-17 **· current release**
+
+### June 11–23 Xinjiang road-trip itinerary (from route image)
+
+- Full 13-day Jun 11–23 schedule: Singapore ↔ Chongqing ↔ Xinjiang Duku loop ↔ Singapore
+- All route-card sights, hotels, and city chains preserved with bilingual copy
+- Itinerary split by travel dates: Chongqing · Jun 14–19 north · Jun 20–23 south
+- tripCountdown start/end set; checklist can sort by travel date again
 
