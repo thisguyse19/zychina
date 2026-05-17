@@ -867,6 +867,13 @@ try {
 } catch (_) { /* fresh */ }
 
 const uiPatchEn = {
+  'onboard.next': 'Next',
+  'onboard.back': 'Back',
+  'onboard.finish': "Let's roll →",
+  'onboard.iphoneTitle': 'iPhone / iPad',
+  'onboard.iphoneDesc': 'Safari → Share → Add to Home Screen.',
+  'onboard.androidTitle': 'Android',
+  'onboard.androidDesc': 'Chrome ⋮ → Add to Home screen / Install app.',
   'nav.cq.days': 'Jun 11–13 · Chongqing',
   'nav.xj1.days': 'Jun 14–19 · Duku & north',
   'nav.xj2.days': 'Jun 20–23 · South & home',
@@ -878,6 +885,13 @@ const uiPatchEn = {
   'badge.sub': '{days} days · {people} travellers · Jun 11–23',
 };
 const uiPatchZh = {
+  'onboard.next': '下一步',
+  'onboard.back': '上一步',
+  'onboard.finish': '开始使用 →',
+  'onboard.iphoneTitle': 'iPhone / iPad',
+  'onboard.iphoneDesc': 'Safari → 分享 → 添加到主屏幕。',
+  'onboard.androidTitle': 'Android',
+  'onboard.androidDesc': 'Chrome 菜单 → 添加到主屏幕 / 安装应用。',
   'nav.cq.days': '6月11–13 · 重庆',
   'nav.xj1.days': '6月14–19 · 独库北线',
   'nav.xj2.days': '6月20–23 · 南线返程',
@@ -893,13 +907,24 @@ Object.assign(uiEn, uiPatchEn);
 Object.assign(uiZh, uiPatchZh);
 
 const tripData = {
-  appVersion: '1.1.1',
+  appVersion: '1.1.2',
   versions: [
+    {
+      v: '1.1.2',
+      date: '2026-05-17',
+      title: 'Onboarding wizard & settings cog fix',
+      latest: true,
+      changes: [
+        'First-visit welcome and add-to-home hints merged into a stepped modal with 1/4 progress pill',
+        'Language pick step (English / 中文) with reminder that sidebar toggles language anytime',
+        'Trip tools cog icon renders correctly in the mobile header and sidebar',
+      ],
+    },
     {
       v: '1.1.1',
       date: '2026-05-17',
       title: 'Place photos & calendar date cards',
-      latest: true,
+      latest: false,
       changes: [
         'Day cards show calendar dates (Jun 12 / 6月12日) large; route text moves to subtitle',
         'Per-day and stay images use Unsplash photos geotagged to each location',

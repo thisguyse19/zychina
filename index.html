@@ -68,7 +68,7 @@
   </div>
   <div class="mobile-header-actions">
     <button type="button" class="mobile-header-pdf" onclick="exportPDF()" aria-label="Export PDF" data-ui-tools="tools.pdf"></button>
-    <button type="button" class="mobile-header-cog" id="mobileTopCog" onclick="toggleTopToolsMenu(event)" aria-label="" data-menu-aria="menu.ariaTripTools" aria-expanded="false" aria-haspopup="true" aria-controls="topToolsMenu"></button>
+    <button type="button" class="mobile-header-cog" id="mobileTopCog" onclick="toggleTopToolsMenu(event)" aria-label="" data-menu-aria="menu.ariaTripTools" aria-expanded="false" aria-haspopup="true" aria-controls="topToolsMenu"><svg class="icon-cog" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
   </div>
 </div>
 <div class="mobile-overlay" id="mobile-overlay" onclick="closeMobileMenu()"></div>
@@ -97,7 +97,7 @@
     </button>
     <div class="sb-actions">
       <button type="button" class="sb-pdf-btn" onclick="exportPDF()" data-ui-tools="tools.pdf" aria-label=""></button>
-      <button type="button" class="sb-cog-btn" id="desktopTopCog" onclick="toggleTopToolsMenu(event)" aria-label="" aria-expanded="false" aria-haspopup="true" aria-controls="topToolsMenu"></button>
+      <button type="button" class="sb-cog-btn" id="desktopTopCog" onclick="toggleTopToolsMenu(event)" aria-label="" aria-expanded="false" aria-haspopup="true" aria-controls="topToolsMenu"><svg class="icon-cog" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></button>
     </div>
   </div>
   <div class="sidebar-nav-scroll">
@@ -618,74 +618,93 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="welcomeModal" onclick="if(event.target===this)this.classList.remove('open')">
-  <div class="modal" style="max-width:500px">
-    <div style="text-align:center;margin-bottom:22px">
-      <div style="font-size:44px;margin-bottom:12px">🗺️</div>
-      <div class="modal-title" data-ui="welcome.title"></div>
-      <p class="modal-sub" style="margin-bottom:0" data-ui="welcome.sub"></p>
+<div class="modal-overlay" id="onboardingModal" role="dialog" aria-modal="true" aria-labelledby="onboardPill">
+  <div class="modal onboard-modal">
+    <div class="onboard-pill" id="onboardPill" aria-live="polite">1 / 4</div>
+    <div class="onboard-steps">
+      <section class="onboard-step active" data-onboard-step="0" aria-labelledby="onboard-lang-heading">
+        <div class="onboard-step-center">
+          <div class="onboard-emoji" aria-hidden="true">🌐</div>
+          <h2 class="modal-title onboard-bilingual" id="onboard-lang-heading">
+            <span>Choose your language</span>
+            <span lang="zh-Hans">选择界面语言</span>
+          </h2>
+          <p class="modal-sub onboard-bilingual onboard-bilingual--hint">
+            <span>You can switch anytime in the sidebar.</span>
+            <span lang="zh-Hans">可随时在侧栏切换语言。</span>
+          </p>
+          <div class="onboard-lang-btns" role="group" aria-label="Language">
+            <button type="button" class="onboard-lang-btn" data-onboard-lang="en" onclick="pickOnboardLang('en')">English</button>
+            <button type="button" class="onboard-lang-btn" data-onboard-lang="zh" onclick="pickOnboardLang('zh')">中文</button>
+          </div>
+        </div>
+      </section>
+      <section class="onboard-step" data-onboard-step="1" hidden>
+        <div class="onboard-step-center">
+          <div class="onboard-emoji" aria-hidden="true">🗺️</div>
+          <div class="modal-title" data-ui="welcome.title"></div>
+          <p class="modal-sub" style="margin-bottom:0" data-ui="welcome.sub"></p>
+        </div>
+      </section>
+      <section class="onboard-step" data-onboard-step="2" hidden>
+        <div class="welcome-items">
+          <div class="welcome-item">
+            <div class="welcome-icon">🤖</div>
+            <div>
+              <div class="welcome-item-title" data-ui="welcome.aiTitle"></div>
+              <div class="welcome-item-desc" data-ui="welcome.aiDesc"></div>
+            </div>
+          </div>
+          <div class="welcome-item">
+            <div class="welcome-icon">💬</div>
+            <div>
+              <div class="welcome-item-title" data-ui="welcome.tooltipsTitle"></div>
+              <div class="welcome-item-desc" data-ui="welcome.tooltipsDesc"></div>
+            </div>
+          </div>
+          <div class="welcome-item">
+            <div class="welcome-icon">✏️</div>
+            <div>
+              <div class="welcome-item-title" data-ui="welcome.editTitle"></div>
+              <div class="welcome-item-desc" data-ui="welcome.editDesc"></div>
+            </div>
+          </div>
+          <div class="welcome-item">
+            <div class="welcome-icon">📄</div>
+            <div>
+              <div class="welcome-item-title" data-ui="welcome.pdfTitle"></div>
+              <div class="welcome-item-desc" data-ui="welcome.pdfDesc"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="onboard-step" data-onboard-step="3" hidden>
+        <div class="onboard-step-center" style="margin-bottom:8px">
+          <div class="onboard-emoji" aria-hidden="true">📲</div>
+          <div class="modal-title" data-ui="addhome.title"></div>
+          <p class="modal-sub" style="margin-bottom:0" data-ui="addhome.sub"></p>
+        </div>
+        <div class="welcome-items">
+          <div class="welcome-item">
+            <div class="welcome-icon">📱</div>
+            <div>
+              <div class="welcome-item-title" data-ui="onboard.iphoneTitle"></div>
+              <div class="welcome-item-desc" data-ui="onboard.iphoneDesc"></div>
+            </div>
+          </div>
+          <div class="welcome-item">
+            <div class="welcome-icon">🤖</div>
+            <div>
+              <div class="welcome-item-title" data-ui="onboard.androidTitle"></div>
+              <div class="welcome-item-desc" data-ui="onboard.androidDesc"></div>
+            </div>
+          </div>
+        </div>
+      </section>
     </div>
-    <div class="welcome-items">
-      <div class="welcome-item">
-        <div class="welcome-icon">🤖</div>
-        <div>
-          <div class="welcome-item-title" data-ui="welcome.aiTitle"></div>
-          <div class="welcome-item-desc" data-ui="welcome.aiDesc"></div>
-        </div>
-      </div>
-      <div class="welcome-item">
-        <div class="welcome-icon">💬</div>
-        <div>
-          <div class="welcome-item-title" data-ui="welcome.tooltipsTitle"></div>
-          <div class="welcome-item-desc" data-ui="welcome.tooltipsDesc"></div>
-        </div>
-      </div>
-      <div class="welcome-item">
-        <div class="welcome-icon">✏️</div>
-        <div>
-          <div class="welcome-item-title" data-ui="welcome.editTitle"></div>
-          <div class="welcome-item-desc" data-ui="welcome.editDesc"></div>
-        </div>
-      </div>
-      <div class="welcome-item">
-        <div class="welcome-icon">📄</div>
-        <div>
-          <div class="welcome-item-title" data-ui="welcome.pdfTitle"></div>
-          <div class="welcome-item-desc" data-ui="welcome.pdfDesc"></div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-actions" style="justify-content:center;margin-top:24px">
-      <button class="btn btn-blue" onclick="document.getElementById('welcomeModal').classList.remove('open')" style="padding:12px 36px;font-size:15px" data-ui="welcome.cta"></button>
-    </div>
-  </div>
-</div>
-
-<div class="modal-overlay" id="addToHomeModal" onclick="if(event.target===this)dismissAddToHomeHint()">
-  <div class="modal" style="max-width:500px">
-    <div style="text-align:center;margin-bottom:18px">
-      <div style="font-size:42px;margin-bottom:10px">📲</div>
-      <div class="modal-title" data-ui="addhome.title"></div>
-      <p class="modal-sub" style="margin-bottom:0" data-ui="addhome.sub"></p>
-    </div>
-    <div class="welcome-items">
-      <div class="welcome-item">
-        <div class="welcome-icon">📱</div>
-        <div>
-          <div class="welcome-item-title"><span class="trip-lng trip-lng--en">iPhone / iPad</span><span class="trip-lng trip-lng--zh" hidden>iPhone / iPad</span></div>
-          <div class="welcome-item-desc"><span class="trip-lng trip-lng--en">Safari → Share → Add to Home Screen.</span><span class="trip-lng trip-lng--zh" hidden>Safari → 分享 → 添加到主屏幕。</span></div>
-        </div>
-      </div>
-      <div class="welcome-item">
-        <div class="welcome-icon">🤖</div>
-        <div>
-          <div class="welcome-item-title">Android</div>
-          <div class="welcome-item-desc"><span class="trip-lng trip-lng--en">Chrome ⋮ → Add to Home screen / Install app.</span><span class="trip-lng trip-lng--zh" hidden>Chrome 菜单 → 添加到主屏幕 / 安装应用。</span></div>
-        </div>
-      </div>
-    </div>
-    <div class="modal-actions" style="justify-content:center;margin-top:22px">
-      <button type="button" class="btn btn-blue" onclick="dismissAddToHomeHint()" style="padding:12px 36px;font-size:15px" data-ui="addhome.cta"></button>
+    <div class="modal-actions onboard-actions">
+      <button type="button" class="btn btn-outline onboard-back" id="onboardBack" onclick="onboardBackClick()" hidden data-ui="onboard.back"></button>
+      <button type="button" class="btn btn-blue onboard-next" id="onboardNext" onclick="onboardNextClick()" disabled data-ui="onboard.next"></button>
     </div>
   </div>
 </div>
