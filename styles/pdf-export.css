@@ -98,8 +98,8 @@ body { font-family: -apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Te
 /* ── MAPS ── */
 .map-section-pdf { margin-bottom: 18pt; page-break-inside: avoid; }
 .map-label { font-size: 8pt; font-weight: 700; letter-spacing: 1.2pt; text-transform: uppercase; margin-bottom: 6pt; }
-.map-label.tas { color: #0071e3; }
-.map-label.melb { color: #ff9500; }
+.map-label.cq { color: #0071e3; }
+.map-label.xj { color: #ff9500; }
 .map-img { width: 100%; border-radius: 7pt; display: block; border: 1pt solid #e5e5e5; }
 .map-caption { font-size: 7.5pt; color: #888; margin-top: 4pt; line-height: 1.4; }
 .maps-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14pt; }

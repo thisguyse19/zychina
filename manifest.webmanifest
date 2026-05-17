@@ -1,7 +1,7 @@
 {
-  "name": "Triple",
-  "short_name": "Triple",
-  "description": "Trip planner — Tasmania & Melbourne",
+  "name": "CQ · Xinjiang Trip Planner",
+  "short_name": "CQ-XJ Planner",
+  "description": "Bilingual Chongqing & Xinjiang private trip planner (CN¥, offline-ready shell)",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

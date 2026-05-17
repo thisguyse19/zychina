@@ -12,7 +12,7 @@ const tripPath = join(root, 'content', 'trip-data.json');
 const data = JSON.parse(readFileSync(tripPath, 'utf8'));
 const versions = [...data.versions].reverse();
 
-let out = `# Triple — version history\n\n`;
+let out = `# CQ–XJ Planner — version history\n\n`;
 out += `**Shipped app version:** \`${data.appVersion}\` (must match \`content/trip-data.json\` → \`appVersion\`).\n\n`;
 out += `This file lists every shipped version from newest to oldest. The **source of truth** is \`content/trip-data.json\` → \`versions\` (same strings power the in-app changelog, sidebar version pill, and “What’s new”).\n\n`;
 out += `After editing \`versions\` in JSON, regenerate this file:\n\n`;

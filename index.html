@@ -3,17 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, viewport-fit=cover, user-scalable=no">
-<title>Triple · Tasmania & Melbourne</title>
-<meta name="description" content="Triple trip planner — Tasmania & Melbourne, December 2026">
+<title>Planner · Chongqing & Xinjiang</title>
+<meta name="description" content="Bilingual private trip planner — Chongqing & Xinjiang (CN¥)">
 <meta name="theme-color" content="#0a1c3e">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="Triple">
+<meta name="apple-mobile-web-app-title" content="CQ · XJ">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="apple-touch-icon" sizes="1024x1024" href="icons/icon-1024.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
-<!-- iOS launch screens (trip-planner mesh theme) -->
 <link rel="apple-touch-startup-image" href="splash/apple-splash-1170-2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
 <link rel="apple-touch-startup-image" href="splash/apple-splash-1284-2778.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)">
 <link rel="apple-touch-startup-image" href="splash/apple-splash-750-1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)">
@@ -30,141 +29,140 @@
 <link rel="stylesheet" href="styles/app.css">
 </head>
 <body>
-<!-- Sync token key + hash with js/app.js (_AK / _AH) -->
 <script>
 (function () {
   try {
-    if (localStorage.getItem('tripAuthToken') === '9172fe8ff387c2cc69d2a0bb8723a6544bf2252c60b18048f5e8a493b6aa6190')
+    if (localStorage.getItem('tripAuthToken') === 'c3edd6e8d8e13da6055b9a49976fba14fa65141dc63bc1ab103d3a4518963424')
       document.documentElement.classList.add('auth-cached');
   } catch (e) {}
 })();
 </script>
 
-<!-- ═══ AUTH OVERLAY ═══ -->
 <div id="auth-overlay">
   <div class="auth-card">
-    <div class="auth-logo">✈️🦘</div>
-    <div class="auth-title">Tasmania &amp; Melbourne</div>
-    <div class="auth-sub">December 2026 · Private trip planner<br>Enter the password to continue</div>
-    <label class="auth-label" for="auth-input">Password</label>
-    <input id="auth-input" class="auth-input" type="password" placeholder="Enter password" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAuth()">
+    <div class="auth-logo">🀄🏔</div>
+    <div class="auth-title"><span class="trip-lng trip-lng--en">Chongqing &amp; Xinjiang</span><span class="trip-lng trip-lng--zh" hidden>重庆 · 新疆</span></div>
+    <div class="auth-sub" data-ui="auth.sub"></div>
+    <label class="auth-label" for="auth-input" data-ui="auth.password"></label>
+    <input id="auth-input" class="auth-input" type="password" data-ui="auth.placeholder" placeholder="" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAuth()">
     <label class="auth-remember">
       <input type="checkbox" id="auth-remember">
-      <span>Remember me on this device</span>
+      <span data-ui="auth.remember"></span>
     </label>
-    <button class="auth-btn" id="auth-btn" onclick="submitAuth()">Unlock</button>
+    <button class="auth-btn" id="auth-btn" onclick="submitAuth()" data-ui="auth.unlock"></button>
     <div class="auth-error" id="auth-error"></div>
     <div class="auth-restore-wrap">
-      <button type="button" class="auth-restore-btn" onclick="startBackupRestoreFromLogin()">Restore from backup…</button>
-      <p class="auth-restore-hint">Choose a Triple JSON export. This device’s saved data is replaced, then the page reloads.</p>
+      <button type="button" class="auth-restore-btn" onclick="startBackupRestoreFromLogin()" data-ui="auth.restore"></button>
+      <p class="auth-restore-hint" data-ui="auth.restoreHint"></p>
     </div>
   </div>
 </div>
 
-<!-- ═══ MOBILE HEADER ═══ -->
 <div class="mobile-header">
   <button class="mobile-hamburger" onclick="toggleMobileMenu()" aria-label="Menu">
     <span></span><span></span><span></span>
   </button>
-  <div class="mobile-header-title">Tasmania &amp; Melbourne</div>
+  <div class="mobile-header-title">
+    <span class="trip-lng trip-lng--en">CQ · Xinjiang Planner</span>
+    <span class="trip-lng trip-lng--zh" hidden>重庆 · 新疆行程簿</span>
+  </div>
   <div class="mobile-header-actions">
-    <button type="button" class="mobile-header-pdf" onclick="exportPDF()" aria-label="Export PDF">↓ PDF</button>
-    <button type="button" class="mobile-header-cog" id="mobileTopCog" onclick="toggleTopToolsMenu(event)" aria-label="Trip tools" aria-expanded="false" aria-haspopup="true" aria-controls="topToolsMenu">⚙</button>
+    <button type="button" class="mobile-header-pdf" onclick="exportPDF()" aria-label="Export PDF" data-ui-tools="tools.pdf"></button>
+    <button type="button" class="mobile-header-cog" id="mobileTopCog" onclick="toggleTopToolsMenu(event)" aria-label="" data-menu-aria="menu.ariaTripTools" aria-expanded="false" aria-haspopup="true" aria-controls="topToolsMenu"></button>
   </div>
 </div>
 <div class="mobile-overlay" id="mobile-overlay" onclick="closeMobileMenu()"></div>
 
-<!-- ═══ TOP TOOLS (cog dropdown — shared mobile + desktop triggers) ═══ -->
 <div class="top-tools-dropdown" id="topToolsMenu" role="menu" aria-hidden="true">
-  <button type="button" class="top-tools-item tb-btn tb-ghost" id="historyBtn" role="menuitem" onclick="openHistory()">⏱ History</button>
-  <button type="button" class="top-tools-item tb-btn tb-danger" id="revertBtn" role="menuitem" onclick="confirmRevert()">↺ Revert all</button>
-  <button type="button" class="top-tools-item tb-btn tb-primary" id="editBtn" role="menuitem" onclick="toggleEdit()">✏️ Edit</button>
-  <button type="button" class="top-tools-item tb-btn tb-ghost" role="menuitem" onclick="openBackupModal()">💾 Backup &amp; restore</button>
+  <button type="button" class="top-tools-item tb-btn tb-ghost" id="historyBtn" role="menuitem" onclick="openHistory()" data-ui-tools="tools.history"></button>
+  <button type="button" class="top-tools-item tb-btn tb-danger" id="revertBtn" role="menuitem" onclick="confirmRevert()" data-ui-tools="tools.revert"></button>
+  <button type="button" class="top-tools-item tb-btn tb-primary" id="editBtn" role="menuitem" onclick="toggleEdit()" data-ui-tools="tools.edit"></button>
+  <button type="button" class="top-tools-item tb-btn tb-ghost" role="menuitem" onclick="openBackupModal()" data-ui-tools="tools.backup"></button>
 </div>
 
-<!-- ═══ SIDEBAR ═══ -->
 <nav class="sidebar" id="sidebar">
   <div class="sb-header">
-    <div class="trip-badge">✈ Dec 2026</div>
-    <div class="sb-title">Tasmania &<br>Melbourne</div>
-    <div class="sb-sub">15 days · 4 friends · 1 RAV4</div>
+    <div class="trip-badge" data-trip-badge></div>
+    <div class="sb-title">
+      <span class="trip-lng trip-lng--en">Chongqing &amp;<br>Xinjiang</span>
+      <span class="trip-lng trip-lng--zh" hidden>重庆<br>新疆</span>
+    </div>
+    <div class="sb-sub" data-trip-sb-sub></div>
+    <div class="lang-toggle" role="group" aria-label="Language">
+      <button type="button" class="lang-btn lang-btn--active" id="lang-btn-en" onclick="setTripLang('en')" data-ui="lang.english"></button>
+      <button type="button" class="lang-btn" id="lang-btn-zh" onclick="setTripLang('zh')" data-ui="lang.chinese"></button>
+    </div>
     <button class="ver-pill" id="ver-pill-btn" onclick="openVersionModal()">
       <span class="ver-pill-dot"></span><span id="ver-pill-label">v1.0</span>
     </button>
     <div class="sb-actions">
-      <button type="button" class="sb-pdf-btn" onclick="exportPDF()" aria-label="Export PDF">↓ PDF</button>
-      <button type="button" class="sb-cog-btn" id="desktopTopCog" onclick="toggleTopToolsMenu(event)" aria-label="Trip tools" aria-expanded="false" aria-haspopup="true" aria-controls="topToolsMenu">⚙</button>
+      <button type="button" class="sb-pdf-btn" onclick="exportPDF()" data-ui-tools="tools.pdf" aria-label=""></button>
+      <button type="button" class="sb-cog-btn" id="desktopTopCog" onclick="toggleTopToolsMenu(event)" aria-label="" aria-expanded="false" aria-haspopup="true" aria-controls="topToolsMenu"></button>
     </div>
   </div>
   <div class="sidebar-nav-scroll">
   <div class="nav-group">
-    <div class="nav-label">Overview</div>
-    <button class="nav-item active" onclick="showPage('overview',this)"><div class="nav-icon">🗺</div>Trip Overview</button>
+    <div class="nav-label" data-ui="nav.labels.overview"></div>
+    <button class="nav-item active" onclick="showPage('overview',this)"><div class="nav-icon">🗺</div><span data-ui="nav.overview"></span></button>
   </div>
   <div class="nav-group">
-    <div class="nav-label">Tasmania</div>
-    <button class="nav-item" onclick="showPage('tas1',this)"><div class="nav-icon">🏔</div>Days 1–6: South</button>
-    <button class="nav-item" onclick="showPage('tas2',this)"><div class="nav-icon">🌊</div>Days 7–11: East &amp; West</button>
+    <div class="nav-label" data-ui="nav.labels.city"></div>
+    <button class="nav-item" onclick="showPage('cq',this)"><div class="nav-icon">🏙</div><span data-ui="nav.cq.days"></span></button>
+    <button class="nav-item" onclick="showPage('xj',this)"><div class="nav-icon">🏜</div><span data-ui="nav.xj.days"></span></button>
   </div>
   <div class="nav-group">
-    <div class="nav-label">Victoria</div>
-    <button class="nav-item" onclick="showPage('melb',this)"><div class="nav-icon">🏙</div>Melbourne &amp; GOR</button>
-  </div>
-  <div class="nav-group">
-    <div class="nav-label">Planning</div>
-    <button class="nav-item" onclick="showPage('stays',this)"><div class="nav-icon">🏠</div>Accommodation</button>
-    <button class="nav-item" onclick="showPage('budget',this)"><div class="nav-icon">💰</div>Budget &amp; Costs</button>
-    <button class="nav-item" onclick="showPage('tips',this)"><div class="nav-icon">💡</div>Tips &amp; Packing</button>
-    <button class="nav-item" onclick="showPage('checklist',this)"><div class="nav-icon">☑️</div>Booking Checklist</button>
+    <div class="nav-label" data-ui="nav.planning"></div>
+    <button class="nav-item" onclick="showPage('stays',this)"><div class="nav-icon">🏠</div><span data-ui="nav.stays"></span></button>
+    <button class="nav-item" onclick="showPage('budget',this)"><div class="nav-icon">💰</div><span data-ui="nav.budget"></span></button>
+    <button class="nav-item" onclick="showPage('tips',this)"><div class="nav-icon">💡</div><span data-ui="nav.tips"></span></button>
+    <button class="nav-item" onclick="showPage('checklist',this)"><div class="nav-icon">☑️</div><span data-ui="nav.checklist"></span></button>
   </div>
   </div>
 </nav>
 
-<!-- ═══ MAIN ═══ -->
 <main class="main">
 
-<!-- ─── PAGE: OVERVIEW ─── -->
 <section id="page-overview" class="page active">
   <div class="hero">
-    <img src="https://images.unsplash.com/photo-1594498653385-d5172c532c00?w=1600&q=80" alt="Tasmania wilderness" onerror="this.src='https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=1600&q=80'">
+    <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1600&q=80" alt="" onerror="this.style.display='none'">
     <div class="hero-overlay">
       <div class="hero-content">
-        <div class="hero-tag">December 7–21, 2026</div>
-        <h1 class="hero-title" data-key="hero-title" data-label="Page title">Tasmania &amp;<br>Melbourne</h1>
-        <p class="hero-sub" data-key="hero-sub" data-label="Hero subtitle">15 days exploring the wild south — fly from Singapore into Hobart, loop the island's ancient rainforests, granite beaches and rugged highlands, then fly to Melbourne for the world's greatest coastal drive.</p>
+        <div id="overview-hero-tag" class="hero-tag"></div>
+        <h1 class="hero-title" id="overview-hero-title" data-key="hero-title" data-label="Page title"></h1>
+        <p class="hero-sub" id="overview-hero-sub" data-key="hero-sub" data-label="Hero subtitle"></p>
       </div>
     </div>
   </div>
 
   <div class="stats-row">
     <div class="stat-card">
-      <div class="stat-val" data-key="stat-days" data-label="Total days">15</div>
-      <div class="stat-lbl">Days total</div>
+      <div class="stat-val" data-trip-stat="days"></div>
+      <div class="stat-lbl" data-ui="stat.daysTotal"></div>
     </div>
     <div class="stat-card">
-      <div class="stat-val">4</div>
-      <div class="stat-lbl">Travellers</div>
+      <div class="stat-val" data-trip-stat="people"></div>
+      <div class="stat-lbl" data-ui="stat.travellers"></div>
     </div>
     <div class="stat-card">
-      <div class="stat-val" data-tip="Tasmania ~1,500km loop + Melbourne/GOR ~600km. Allows for detours and exploration.">~2,100<span style="font-size:18px;font-weight:500">km</span></div>
-      <div class="stat-lbl">Total driving</div>
+      <div class="stat-val" data-trip-stat="km"></div>
+      <div class="stat-lbl" data-ui="stat.drive"></div>
     </div>
     <div class="stat-card">
-      <div class="stat-val" data-key="stat-budget" data-label="Budget estimate per person" data-tip="Mid-range estimate per person including flights, accommodation, transport, food, and activities. See Budget page for full breakdown.">~$4,200</div>
-      <div class="stat-lbl">Est. per person (AUD)</div>
+      <div class="stat-val" data-trip-stat="budget"></div>
+      <div class="stat-lbl" data-stat-key="pp" data-ui="stat.pp"></div>
     </div>
   </div>
 
   <div class="section flight-board-wrap" id="flight-board-section">
     <div class="flight-board-intro">
       <div class="sec-header flight-board-sec-header">
-        <div class="sec-tag">Schedule</div>
+        <div class="sec-tag flight-board-sec-tag"></div>
         <div class="flight-board-head-row">
-          <h2 class="sec-title flight-board-sec-title">Your flights</h2>
-          <button type="button" class="flight-board-toggle-pill" id="flight-board-toggle" aria-expanded="true" aria-controls="flight-board-stack flight-add-btn">Hide</button>
+          <h2 class="sec-title flight-board-sec-title"></h2>
+          <button type="button" class="flight-board-toggle-pill" id="flight-board-toggle" aria-expanded="true" aria-controls="flight-board-stack flight-add-btn"></button>
         </div>
       </div>
-      <button type="button" class="btn flight-add-btn-glass" id="flight-add-btn">+ Add flight</button>
+      <button type="button" class="btn flight-add-btn-glass" id="flight-add-btn"></button>
     </div>
     <div class="flight-board-stack" id="flight-board-stack">
       <div id="trip-countdown-banner" class="trip-countdown-banner" role="status" aria-live="polite" aria-label="Next flight"></div>
@@ -177,313 +175,232 @@
 
   <div class="section">
     <div class="sec-header">
-      <div class="sec-tag">The Journey</div>
-      <h2 class="sec-title">15 Days in the Wild South</h2>
-      <p class="sec-sub" data-key="overview-desc" data-label="Overview description">Fly into Hobart and loop Tasmania clockwise — convict history, pristine rainforest, glowing granite beaches, and alpine wilderness — then fly to Melbourne for the city's legendary laneways and coffee, before tackling the breathtaking Great Ocean Road.</p>
+      <div class="sec-tag" data-ui="overview.routeTag"></div>
+      <h2 class="sec-title" data-ui="overview.journeyTitle"></h2>
+      <p class="sec-sub"><span class="trip-lng trip-lng--en">Use the Chongqing transit stack for riverfront nights and short rail hops, then treat Ürümqi as the logistics hub before dropping into desert heat near Turpan. Dates slide in later — this layout already groups ideas by region.</span><span class="trip-lng trip-lng--zh" hidden>先在重庆用轨交与高差步道消化夜景火锅，再以乌鲁木齐作为北疆跳板，最后用吐鲁番的干热绿洲收束节奏。日历稍后加入 —— 目前已经按片区整理思路。</span></p>
+      <p style="margin-top:8px;font-size:13px;color:var(--text-sec);line-height:1.65"><span class="trip-lng trip-lng--en">When departure and return calendars are finalized, flip <code>start</code> / <code>end</code> in <code>tripCountdown</code> inside JSON — the banner and exports pick them up automatically.</span><span class="trip-lng trip-lng--zh" hidden>确定出发日与返程日后，只要在 JSON 的 <code>tripCountdown</code> 填入 <code>start</code> / <code>end</code>，横幅与导出页会自动切换倒计时模式。</span></p>
     </div>
 
     <div class="two-col">
-      <div>
-        <div class="wb" style="margin-bottom:16px">
-          <span class="lbl">Tasmania · Dec 7–17</span>
-          <div class="route-bar">
-            <span class="route-stop">✈ SIN → Hobart</span><span class="route-arrow">→</span>
-            <span class="route-stop">Hobart</span><span class="route-arrow">→</span>
-            <span class="route-stop">Bruny Is.</span><span class="route-arrow">→</span>
-            <span class="route-stop">Maria Is.</span><span class="route-arrow">→</span>
-            <span class="route-stop">Port Arthur</span><span class="route-arrow">→</span>
-            <span class="route-stop">Freycinet</span><span class="route-arrow">→</span>
-            <span class="route-stop">Bay of Fires</span><span class="route-arrow">→</span>
-            <span class="route-stop">Cradle Mtn</span><span class="route-arrow">→</span>
-            <span class="route-stop">✈ Melbourne</span>
-          </div>
-          <p style="font-size:13px;color:var(--text-sec);margin-top:10px;line-height:1.6">Fly from Singapore into Hobart Airport, clockwise loop of Tasmania in the RAV4, then fly Hobart → Melbourne on Day 11.</p>
+      <div class="wb">
+        <span class="lbl"><span class="trip-lng trip-lng--en">Chongqing corridor</span><span class="trip-lng trip-lng--zh" hidden>重庆轴线</span></span>
+        <div class="route-bar">
+          <span class="route-stop">CBD</span><span class="route-arrow">→</span>
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Riverside neon</span><span class="trip-lng trip-lng--zh" hidden>江畔夜景</span></span><span class="route-arrow">→</span>
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Ciqikou</span><span class="trip-lng trip-lng--zh" hidden>磁器口</span></span><span class="route-arrow">→</span>
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Karst day arc</span><span class="trip-lng trip-lng--zh" hidden>武隆喀斯特</span></span><span class="route-arrow">→</span>
+          <span class="route-stop">✈ ✕</span>
         </div>
-        <div class="wb">
-          <span class="lbl">Melbourne &amp; Great Ocean Road · Dec 17–21</span>
-          <div class="route-bar">
-            <span class="route-stop">Melbourne</span><span class="route-arrow">→</span>
-            <span class="route-stop">Torquay</span><span class="route-arrow">→</span>
-            <span class="route-stop">Lorne</span><span class="route-arrow">→</span>
-            <span class="route-stop">Apollo Bay</span><span class="route-arrow">→</span>
-            <span class="route-stop">Cape Otway</span><span class="route-arrow">→</span>
-            <span class="route-stop">12 Apostles</span><span class="route-arrow">→</span>
-            <span class="route-stop">✈ Fly home</span>
-          </div>
-          <p style="font-size:13px;color:var(--text-sec);margin-top:10px;line-height:1.6">Fly in from Tasmania on Day 11, two Melbourne city days, then drive the Great Ocean Road westward for the most dramatic coastal views.</p>
-        </div>
+        <p class="capt" id="overview-route-cq-caption" style="font-size:13px;color:var(--text-sec);margin-top:10px;line-height:1.6"></p>
       </div>
       <div class="wb">
-        <span class="lbl">Trip Highlights</span>
-        <div class="act-list">
-          <div class="act-item"><div class="act-icon">🎨</div><div><div class="act-name">MONA, Hobart</div><div class="act-desc">World-class provocative art museum carved into sandstone cliffs above the Derwent River</div></div></div>
-          <div class="act-item"><div class="act-icon">🏖</div><div><div class="act-name">Wineglass Bay</div><div class="act-desc">Consistently voted one of the world's top 10 beaches — pink granite, white sand, teal water</div></div></div>
-          <div class="act-item"><div class="act-icon">🦘</div><div><div class="act-name">Cradle Mountain</div><div class="act-desc">Alpine wilderness with almost-guaranteed wombat sightings on the Dove Lake circuit</div></div></div>
-          <div class="act-item"><div class="act-icon">🪨</div><div><div class="act-name">Bay of Fires</div><div class="act-desc">50km of orange-lichen granite boulders, white sand, and the clearest turquoise water in Tasmania</div></div></div>
-          <div class="act-item"><div class="act-icon">🌊</div><div><div class="act-name">Twelve Apostles</div><div class="act-desc">Limestone stacks rising from the Southern Ocean — most dramatic at sunrise or sunset</div></div></div>
+        <span class="lbl"><span class="trip-lng trip-lng--en">Xinjiang sampler</span><span class="trip-lng trip-lng--zh" hidden>新疆速写弧</span></span>
+        <div class="route-bar">
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Ürümqi</span><span class="trip-lng trip-lng--zh" hidden>乌鲁木齐</span></span><span class="route-arrow">→</span>
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Tianshan Lake</span><span class="trip-lng trip-lng--zh" hidden>天池</span></span><span class="route-arrow">→</span>
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Turpan</span><span class="trip-lng trip-lng--zh" hidden>吐鲁番</span></span><span class="route-arrow">→</span>
+          <span class="route-stop"><span class="trip-lng trip-lng--en">Buffer</span><span class="trip-lng trip-lng--zh" hidden>缓冲日</span></span><span class="route-arrow">→</span>
+          <span class="route-stop">✈</span>
         </div>
+        <p class="capt" id="overview-route-xj-caption" style="font-size:13px;color:var(--text-sec);margin-top:10px;line-height:1.6"></p>
       </div>
     </div>
 
-    <div class="hl-box" style="margin-top:0">
-      <p>🧍 <strong>Jordan arrives Dec 5</strong> — two days of free &amp; easy in Hobart before the rest of the squad lands on Dec 7. The official group trip starts Dec 7.</p>
-    </div>
-
-    <div class="divider"></div>
-
-    <div class="sec-header">
-      <div class="sec-tag">Getting There</div>
-      <h2 class="sec-title">Flights — In & Out</h2>
-      <p class="sec-sub">Two flights frame the Tasmania leg: fly from Singapore into Hobart to start, and fly Hobart to Melbourne at the end of Day 11.</p>
-    </div>
-    <div class="three-col" style="margin-bottom:16px">
-      <div class="stat-card"><div style="font-size:26px;margin-bottom:8px">✈️</div><div class="stat-val" style="font-size:20px" data-key="flight-hobartleg" data-label="Flight to Hobart">~$400–700</div><div class="stat-lbl">Return flights to Hobart<br>per person (Singapore)</div></div>
-      <div class="stat-card"><div style="font-size:26px;margin-bottom:8px">✈️</div><div class="stat-val" style="font-size:20px" data-key="flight-melbleg" data-label="Hobart to Melbourne flight" data-tip="Hobart Airport (HBA) — 190km south of Cradle Mountain (2.5 hrs). Jetstar, Virgin Australia, and Qantas fly to Melbourne Tullamarine. ~1hr 10min flight. Book with your Tasmania legs.">~$120–250</div><div class="stat-lbl">Hobart → Melbourne<br>per person (one-way)</div></div>
-      <div class="stat-card"><div style="font-size:26px;margin-bottom:8px">📅</div><div class="stat-val" style="font-size:16px;color:var(--blue)">Book Early</div><div class="stat-lbl">December is peak season —<br>prices rise fast</div></div>
-    </div>
-    <div class="hl-box">
-      <p><strong>Flight tips:</strong> Book your <span data-tip="Flying from Singapore (SIN). Singapore Airlines, Scoot, and Jetstar International fly to Sydney or Melbourne, then connect to Hobart (HBA) on Qantas, Virgin, or Jetstar. Total ~12–16hrs.">Singapore → Hobart return flights</span> and your <span data-tip="Hobart Airport (HBA) — you drop the RAV4 here on Day 11 (same airport as pickup, no one-way fee). Jetstar, Virgin Australia, and Qantas fly to Melbourne Tullamarine. ~1hr 10min flight.">Hobart → Melbourne flight</span> as early as possible — December peak season prices double for late bookings. Check-in bags count separately on budget carriers. The RAV4 is picked up and dropped off at Hobart Airport — no one-way surcharge.</p>
-    </div>
-
-    <div class="divider"></div>
-    <div class="sec-header">
-      <div class="sec-tag">Vehicle</div>
-      <h2 class="sec-title">Car Rental</h2>
-      <p class="sec-sub">Two separate rentals — a RAV4 for Tasmania's highways and gravel national park roads, and a second car picked up at Melbourne Airport for the Great Ocean Road.</p>
-    </div>
-    <div class="wb">
-      <div class="two-col">
-        <div>
-          <div class="act-list">
-            <div class="act-item"><div><div class="act-name" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-sec)">Tasmania leg</div></div></div>
-            <div class="act-item"><div class="act-icon">📅</div><div><div class="act-name">Pick up: Dec 7 — Hobart Airport</div><div class="act-desc">Collect from the Hobart Airport car rental desks on arrival from Singapore — desks are in the arrivals hall</div></div></div>
-            <div class="act-item"><div class="act-icon">📅</div><div><div class="act-name">Drop off: Dec 17 — Hobart Airport</div><div class="act-desc">Same airport as pickup — no one-way surcharge. Confirm full-tank requirement when collecting the car</div></div></div>
-            <div class="act-item"><div class="act-icon">💰</div><div><div class="act-name" data-key="car-cost" data-label="Car rental estimate (Tasmania)" data-tip="December peak pricing. Book through Avis, Europcar, Sixt, or local Tasmanian operators like Drive Car Hire.">Est. $110–150/day · 10 days → ~$1,100–1,500</div><div class="act-desc">Split 4 ways: ~$275–375 per person · Tasmania leg only</div></div></div>
-            <div class="act-item" style="margin-top:8px"><div><div class="act-name" style="font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:var(--text-sec)">Melbourne leg</div></div></div>
-            <div class="act-item"><div class="act-icon">📅</div><div><div class="act-name">Pick up: Dec 17 — Melbourne Airport (Tullamarine)</div><div class="act-desc">Collect at Tullamarine arrivals hall on landing from Hobart — needed for the Great Ocean Road</div></div></div>
-            <div class="act-item"><div class="act-icon">📅</div><div><div class="act-name">Drop off: Dec 21 — Melbourne Airport (Tullamarine)</div><div class="act-desc">Return before your flight home. Check CityLink toll requirements (tollway ~$5 each way airport↔CBD)</div></div></div>
-            <div class="act-item"><div class="act-icon">💰</div><div><div class="act-name" data-tip="Avis, Europcar, Budget all have counters at Tullamarine arrivals. Compare at DriveNow.com.au.">Est. $90–120/day · 4 days → ~$360–480</div><div class="act-desc">Split 4 ways: ~$90–120 per person · Melbourne leg only</div></div></div>
-          </div>
-        </div>
-        <div>
-          <div class="act-list">
-            <div class="act-item"><div class="act-icon">⛽</div><div><div class="act-name" data-tip="Tasmania petrol ~$2.40/L. RAV4 ~8L/100km. Total Tasmania driving ~1,500km = ~120L = ~$288. Split 4 = ~$72pp.">Fuel: ~$96/person (Tasmania)</div><div class="act-desc">Tasmania ~1,500km total. Fuel up whenever you see a servo — remote areas can be 100km+ between stations</div></div></div>
-            <div class="act-item"><div class="act-icon">🛡</div><div><div class="act-name">Insurance</div><div class="act-desc">Always take the excess reduction. Standard excess on Tasmanian rentals can be $3,000+. Excess reduction ~$25–35/day</div></div></div>
-            <div class="act-item"><div class="act-icon">🦘</div><div><div class="act-name">Wildlife warning</div><div class="act-desc">Avoid driving after dark in Tasmania — wombats, wallabies and Tasmanian devils cause many accidents</div></div></div>
-          </div>
-        </div>
+    <div class="wb" style="margin-top:16px">
+      <span class="lbl" data-ui="overview.highlightsLbl"></span>
+      <div class="act-list">
+        <div class="act-item"><div class="act-icon">🌶</div><div><div class="act-name"><span class="trip-lng trip-lng--en">Summit hotpot labs</span><span class="trip-lng trip-lng--zh" hidden>山顶与江岸火锅实验场</span></div><div class="act-desc"><span class="trip-lng trip-lng--en">Night breeze + spice fog — book river-view tables when friends visit peak season.</span><span class="trip-lng trip-lng--zh" hidden>江风与辣雾共生，旺季记得抢临江位。</span></div></div></div>
+        <div class="act-item"><div class="act-icon">🚡</div><div><div class="act-name"><span class="trip-lng trip-lng--en">Yangtze ropeway hop</span><span class="trip-lng trip-lng--zh" hidden>长江索道跨江</span></div><div class="act-desc"><span class="trip-lng trip-lng--en">Classic skyline cut — pair with a late stroll through Hongyadong tiers.</span><span class="trip-lng trip-lng--zh" hidden>城市天际线一切割，接洪崖洞层层灯火。</span></div></div></div>
+        <div class="act-item"><div class="act-icon">🏔</div><div><div class="act-name"><span class="trip-lng trip-lng--en">Heavenly Lake ridgeline</span><span class="trip-lng trip-lng--zh" hidden>天池雪岭走廊</span></div><div class="act-desc"><span class="trip-lng trip-lng--en">Forest-line bus switchbacks then alpine wind — pack layers even in summer.</span><span class="trip-lng trip-lng--zh" hidden>夏季也要备防风保暖，景区巴士弯多易晕。</span></div></div></div>
+        <div class="act-item"><div class="act-icon">🏜</div><div><div class="act-name"><span class="trip-lng trip-lng--en">Turpan Karez cool</span><span class="trip-lng trip-lng--zh" hidden>吐鲁番坎儿井清凉</span></div><div class="act-desc"><span class="trip-lng trip-lng--en">Desert heat outside, underground breeze inside — ideal afternoon reset.</span><span class="trip-lng trip-lng--zh" hidden>地表炙热、井下沁凉，适合安排午后避暑。</span></div></div></div>
       </div>
     </div>
   </div>
 
-  <!-- Tasmania Route Map -->
+  <div class="section">
+    <div class="sec-header">
+      <div class="sec-tag" data-ui="overview.gettingTransport"></div>
+      <h2 class="sec-title"><span class="trip-lng trip-lng--en">Domestic legs &amp; airport math</span><span class="trip-lng trip-lng--zh" hidden>国内段与机场衔接</span></h2>
+      <p class="sec-sub"><span class="trip-lng trip-lng--en">Chongqing Jiangbei (CKG) is the default front door; Ürümqi Diwopu (URC) anchors Xinjiang. High-speed rail is an option if you want to glue regions without another bag check — watch summer weather cancels.</span><span class="trip-lng trip-lng--zh" hidden>重庆江北 (CKG) 与乌鲁木齐地窝堡 (URC) 是默认门户。若想少一次值机，可关注动车衔接，但暑期天气波动会放大延误概率。</span></p>
+    </div>
+    <div class="hl-box"><p><span class="trip-lng trip-lng--en"><strong>Tip:</strong> Keep PDF + screenshot backups offline — WeChat loves to compress map tiles.</span><span class="trip-lng trip-lng--zh" hidden><strong>提示：</strong>离线留一份 PDF 与截图备份，微信群传图容易糊掉地图细节。</span></p></div>
+  </div>
+
   <div class="map-section">
     <div class="map-card">
       <div class="map-header">
-        <h3>🗺 Tasmania Route Map</h3>
-        <p>11-day clockwise loop · Hobart → East Coast → Highlands · ~1,500 km total driving</p>
+        <h3 data-ui="map.cqTitle"></h3>
+        <p data-ui="map.cqSub"></p>
       </div>
-      <div id="map-tas" class="map-container"></div>
+      <div id="map-cq" class="map-container"></div>
       <div class="map-legend">
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#0071e3"></div>Main stops</div>
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#34c759"></div>Day trips (from Hobart)</div>
-        <div class="map-legend-item"><span style="width:24px;height:3px;background:#0071e3;display:inline-block;border-radius:2px"></span>Driving route</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#0284c7"></div><span data-ui="map.legend.main"></span></div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#34c759"></div><span data-ui="map.legend.daytrip"></span></div>
+        <div class="map-legend-item"><span style="width:24px;height:3px;background:#7dd3fc;display:inline-block;border-radius:2px"></span><span data-ui="map.legend.route"></span></div>
       </div>
     </div>
-  </div>
-</section>
-
-<!-- ─── PAGE: TASMANIA DAYS 1–5 ─── -->
-<section id="page-tas1" class="page">
-  <div class="hero">
-    <img src="https://images.unsplash.com/photo-1516912481808-3406841bd33c?w=1600&q=80" alt="Hobart Tasmania" onerror="this.src='https://images.unsplash.com/photo-1560813962-ff3d8fcf59ba?w=1600&q=80'">
-    <div class="hero-overlay">
-      <div class="hero-content">
-        <div class="hero-tag">Tasmania · Days 1–6</div>
-        <h1 class="hero-title">South Tasmania</h1>
-        <p class="hero-sub">Fly into Hobart from Singapore, explore the city's art and history, day-trip to Bruny Island and Maria Island, then continue to Port Arthur and Freycinet.</p>
-      </div>
-    </div>
-  </div>
-  <div class="section" style="padding-top:32px">
-    <div class="day-list" id="days-tas1"></div>
-  </div>
-</section>
-
-<!-- ─── PAGE: TASMANIA DAYS 6–10 ─── -->
-<section id="page-tas2" class="page">
-  <div class="hero">
-    <img src="https://images.unsplash.com/photo-1526779259212-939e64788e3c?w=1600&q=80" alt="Wineglass Bay" onerror="this.src='https://images.unsplash.com/photo-1504701954957-2010ec3bcec1?w=1600&q=80'">
-    <div class="hero-overlay">
-      <div class="hero-content">
-        <div class="hero-tag">Tasmania · Days 7–11</div>
-        <h1 class="hero-title">East Coast &amp; Highlands</h1>
-        <p class="hero-sub">Wineglass Bay hikes, Bay of Fires beaches, and Cradle Mountain's wombat-filled alpine wilderness.</p>
-      </div>
-    </div>
-  </div>
-  <div class="section" style="padding-top:32px">
-    <div class="day-list" id="days-tas2"></div>
-  </div>
-</section>
-
-<!-- ─── PAGE: MELBOURNE & GOR ─── -->
-<section id="page-melb" class="page">
-  <div class="hero">
-    <img src="https://images.unsplash.com/photo-1545044846-351ba102b6d5?w=1600&q=80" alt="Great Ocean Road" onerror="this.src='https://images.unsplash.com/photo-1573935448851-e9e02612eddd?w=1600&q=80'">
-    <div class="hero-overlay">
-      <div class="hero-content">
-        <div class="hero-tag">Victoria · Days 12–15</div>
-        <h1 class="hero-title">Melbourne &amp;<br>Great Ocean Road</h1>
-        <p class="hero-sub">Coffee-soaked laneways, wild koalas, and the dramatic limestone stacks of the Twelve Apostles.</p>
-      </div>
-    </div>
-  </div>
-  <div class="section" style="padding-top:32px">
-    <div class="day-list" id="days-melb"></div>
-  </div>
-
-  <!-- Melbourne & GOR Route Map -->
-  <div class="map-section">
-    <div class="map-card">
+    <div class="map-card" style="margin-top:18px">
       <div class="map-header">
-        <h3>🗺 Melbourne & Great Ocean Road Map</h3>
-        <p>4-day section · Melbourne → Torquay → Apollo Bay → Twelve Apostles · ~600 km total driving</p>
+        <h3 data-ui="map.xjTitle"></h3>
+        <p data-ui="map.xjSub"></p>
       </div>
-      <div id="map-melb" class="map-container"></div>
+      <div id="map-xj" class="map-container"></div>
       <div class="map-legend">
-        <div class="map-legend-item"><div class="map-legend-dot" style="background:#ff9500"></div>Main stops</div>
-        <div class="map-legend-item"><span style="width:24px;height:3px;background:#ff9500;display:inline-block;border-radius:2px"></span>Great Ocean Road</div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#f97316"></div><span data-ui="map.legend.main"></span></div>
+        <div class="map-legend-item"><div class="map-legend-dot" style="background:#34c759"></div><span data-ui="map.legend.daytrip"></span></div>
+        <div class="map-legend-item"><span style="width:24px;height:3px;background:#fdba74;display:inline-block;border-radius:2px"></span><span data-ui="map.legend.route"></span></div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ─── PAGE: ACCOMMODATION ─── -->
+<section id="page-cq" class="page">
+  <div class="hero">
+    <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?w=1600&q=80" alt="" onerror="this.src='https://images.unsplash.com/photo-1577083555083-9247cdd35b9c?w=1600&q=80'">
+    <div class="hero-overlay">
+      <div class="hero-content">
+        <div class="hero-tag"><span class="trip-lng trip-lng--en">Chongqing · city leg</span><span class="trip-lng trip-lng--zh" hidden>重庆 · 城市段</span></div>
+        <h1 class="hero-title"><span class="trip-lng trip-lng--en">Fog, spice &amp; vertical streets</span><span class="trip-lng trip-lng--zh" hidden>雾都辣香与立体街区</span></h1>
+        <p class="hero-sub"><span class="trip-lng trip-lng--en">Dense rail mesh, river gorges of neon, and punchy day trips when legs feel fresh.</span><span class="trip-lng trip-lng--zh" hidden>轨道成网、江岸霓虹冲霄，腿脚允许时穿插喀斯特或古镇日归。</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="section" style="padding-top:32px">
+    <div class="day-list" id="days-cq"></div>
+  </div>
+</section>
+
+<section id="page-xj" class="page">
+  <div class="hero">
+    <img src="https://images.unsplash.com/photo-1526481280695-074c716a8e71?w=1600&q=80" alt="" onerror="this.src='https://images.unsplash.com/photo-1507608616759-54f48f0af7ee?w=1600&q=80'">
+    <div class="hero-overlay">
+      <div class="hero-content">
+        <div class="hero-tag"><span class="trip-lng trip-lng--en">Xinjiang · region leg</span><span class="trip-lng trip-lng--zh" hidden>新疆 · 区域段</span></div>
+        <h1 class="hero-title"><span class="trip-lng trip-lng--en">High plateaus &amp; desert orchards</span><span class="trip-lng trip-lng--zh" hidden>高原风口与绿洲果园</span></h1>
+        <p class="hero-sub"><span class="trip-lng trip-lng--en">Capital logistics, alpine lake air, then Turpan’s blast-furnace plains — shuffle if flights hiccup.</span><span class="trip-lng trip-lng--zh" hidden>首府集散、天池换肺，再到吐鲁番火洲，航班波动时可重排。</span></p>
+      </div>
+    </div>
+  </div>
+  <div class="section" style="padding-top:32px">
+    <div class="day-list" id="days-xj"></div>
+  </div>
+</section>
+
 <section id="page-stays" class="page">
   <div class="hero">
-    <img src="https://images.unsplash.com/photo-1542718610-a1d656d1884c?w=1600&q=80" alt="Cosy accommodation" onerror="this.src='https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=1600&q=80'">
+    <img src="https://images.unsplash.com/photo-1522771739844-6a9f6d5f14af?w=1600&q=80" alt="" onerror="this.style.display='none'">
     <div class="hero-overlay">
       <div class="hero-content">
-        <div class="hero-tag">Accommodation</div>
-        <h1 class="hero-title">Where to Stay</h1>
-        <p class="hero-sub">14 nights across 7 locations — all Airbnb whole-home rentals, perfect for a group of four.</p>
+        <div class="hero-tag"><span class="trip-lng trip-lng--en">Stays</span><span class="trip-lng trip-lng--zh" hidden>住宿</span></div>
+        <h1 class="hero-title"><span class="trip-lng trip-lng--en">Where to sleep</span><span class="trip-lng trip-lng--zh" hidden>落脚建议</span></h1>
+        <p class="hero-sub"><span class="trip-lng trip-lng--en">Whole-apartment picks around Jiefangbei, riverside towers, Ürümqi hubs, and Turpan courtyards — prices are CN¥ ballparks.</span><span class="trip-lng trip-lng--zh" hidden>解放碑、滨江、乌市枢纽与吐鲁番合院式公寓为主，标价为人民币估算。</span></p>
       </div>
     </div>
   </div>
   <div class="section" style="padding-top:32px">
     <div class="sec-header">
-      <div class="sec-tag">All Stays</div>
-      <h2 class="sec-title">14 Nights, 7 Locations</h2>
-      <p class="sec-sub" data-key="stays-desc" data-label="Accommodation overview">All prices are whole-home Airbnb estimates for 4 guests in December 2026 peak season. Book Coles Bay (Freycinet) and Cradle Mountain the moment you decide — they sell out months ahead. The Melbourne stay covers Dec 17–18 (2 nights), arriving after the Hobart flight.</p>
+      <div class="sec-tag">Airbnb / hotel style</div>
+      <h2 class="sec-title"><span class="trip-lng trip-lng--en">Nightly anchors</span><span class="trip-lng trip-lng--zh" hidden>夜间锚点</span></h2>
+      <p class="sec-sub" data-key="stays-desc"><span class="trip-lng trip-lng--en">Lock lake-view Ürümqi weekends early; Turpan midsummer sells surprising fast once melons ripen.</span><span class="trip-lng trip-lng--zh" hidden>乌市天山景房与吐鲁番暑期房态紧，确定日期后尽早下单。</span></p>
     </div>
-    <div class="hl-box"><p>💡 <strong>Pro tip:</strong> Look for properties with a full kitchen to save on food costs — self-catering breakfast and a few dinners per week can save $50–80 per person per day. Supermarkets: Hobart, Launceston, St Helens, and Sheffield all have Coles, Woolworths, or IGA.</p></div>
     <div class="stay-list" id="stay-list"></div>
   </div>
 </section>
 
-<!-- ─── PAGE: BUDGET ─── -->
 <section id="page-budget" class="page">
   <div class="hero">
-    <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1600&q=80" alt="Budget planning" onerror="this.src='https://images.unsplash.com/photo-1580048915913-4f8f5cb481c4?w=1600&q=80'">
+    <img src="https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1600&q=80" alt="" onerror="this.style.display='none'">
     <div class="hero-overlay">
       <div class="hero-content">
-        <div class="hero-tag">Costs &amp; Budget</div>
-        <h1 class="hero-title">Budget Breakdown</h1>
-        <p class="hero-sub">Realistic estimates for mid-range travel — all figures in AUD, December 2026 pricing.</p>
+        <div class="hero-tag"><span class="trip-lng trip-lng--en">CN¥ ledger</span><span class="trip-lng trip-lng--zh" hidden>人民币账簿</span></div>
+        <h1 class="hero-title"><span class="trip-lng trip-lng--en">Budget mix</span><span class="trip-lng trip-lng--zh" hidden>花费结构</span></h1>
+        <p class="hero-sub"><span class="trip-lng trip-lng--en">Tables track group totals versus per traveller — tweak cells in Edit mode.</span><span class="trip-lng trip-lng--zh" hidden>表中区分整组与人均，可用编辑模式就地调整示例数字。</span></p>
       </div>
     </div>
   </div>
   <div class="section" style="padding-top:32px">
     <div class="budget-summary">
       <div class="budget-card">
-        <div class="budget-amount" id="total-pp" data-tip="Mid-range estimate. Budget travellers could do $2,600; luxury ~$5,000+">~$3,500</div>
-        <div class="budget-lbl">Per person (mid-range)</div>
+        <div class="budget-amount" id="total-pp">~¥12,000</div>
+        <div class="budget-lbl"><span class="trip-lng trip-lng--en">Per person (rounded)</span><span class="trip-lng trip-lng--zh" hidden>人均（取整示例）</span></div>
       </div>
       <div class="budget-card">
-        <div class="budget-amount" id="total-group" data-tip="Total for 4 people. Many costs split 4 ways (car, accommodation, activities).">~$14,000</div>
-        <div class="budget-lbl">Total group (4 people)</div>
+        <div class="budget-amount" id="total-group">~¥48,000</div>
+        <div class="budget-lbl"><span class="trip-lng trip-lng--en">Group of four · estimate</span><span class="trip-lng trip-lng--zh" hidden>四人小队 · 估算</span></div>
       </div>
       <div class="budget-card">
-        <div class="budget-amount" data-tip="Including car rental, fuel, parks passes, and activities. Excludes flights.">~$975</div>
-        <div class="budget-lbl">Transport per person</div>
+        <div class="budget-amount">~¥1,400</div>
+        <div class="budget-lbl" data-ui="budget.transportPpHint"></div>
       </div>
     </div>
 
     <div class="chart-grid" style="margin-bottom:22px">
       <div class="chart-box">
-        <div class="chart-title">Spend by Category (per person)</div>
+        <div class="chart-title" data-ui="budget.chart.pie"></div>
         <canvas id="pieChart" height="260"></canvas>
       </div>
       <div class="chart-box">
-        <div class="chart-title">Cost Breakdown (AUD per person)</div>
+        <div class="chart-title" data-ui="budget.chart.bar"></div>
         <canvas id="barChart" height="260"></canvas>
       </div>
     </div>
 
     <div class="chart-box">
-      <div class="chart-title">Detailed Cost Table</div>
+      <div class="chart-title" data-ui="budget.tableTitle"></div>
       <div class="cost-table-wrap">
         <table class="cost-table">
-          <thead><tr><th>Category</th><th>Item</th><th>Total (Group)</th><th>Per Person</th><th>Notes</th></tr></thead>
+          <thead><tr><th>Category</th><th>Item</th><th>Total</th><th>PP</th><th>Notes</th></tr></thead>
           <tbody id="cost-table-body"></tbody>
         </table>
       </div>
     </div>
-
     <div class="hl-box" style="margin-top:8px">
-      <p>💡 <strong>Money-saving tips:</strong> Buy the <span data-tip="~$95.50 per vehicle (not per person). Covers ALL Tasmania national parks for 2 months. Far cheaper than daily fees at Freycinet, Cradle Mountain, Mt Field, Tasman NP combined.">Tasmania Holiday Parks Pass</span> for ~$95.50/vehicle. Self-cater 3–4 dinners per week. Fill up on fuel in major towns. MONA is included in the <span data-tip="MONA ROMA ferry + museum entry ~$69/person. Worth every cent — allow 4–5 hours.">MONA combo ticket</span>.</p>
+      <p><span class="trip-lng trip-lng--en"><strong>Note:</strong> CN¥ midsummer fares swing sharply — rerun numbers after ticketing.</span><span class="trip-lng trip-lng--zh" hidden><strong>说明：</strong>暑期票价抖动大，出票后用同一表再核对。</span></p>
     </div>
   </div>
 </section>
 
-<!-- ─── PAGE: TIPS ─── -->
 <section id="page-tips" class="page">
   <div class="hero">
-    <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1600&q=80" alt="Travel packing" onerror="this.src='https://images.unsplash.com/photo-1553877522-43269d4ea984?w=1600&q=80'">
+    <img src="https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1600&q=80" alt="" onerror="this.style.display='none'">
     <div class="hero-overlay">
       <div class="hero-content">
-        <div class="hero-tag">Practical Info</div>
-        <h1 class="hero-title">Tips &amp; Packing</h1>
-        <p class="hero-sub">Everything you need to know before you go — from wildlife warnings to the best cafes.</p>
+        <div class="hero-tag"><span class="trip-lng trip-lng--en">Tips</span><span class="trip-lng trip-lng--zh" hidden>贴士</span></div>
+        <h1 class="hero-title"><span class="trip-lng trip-lng--en">Field notes</span><span class="trip-lng trip-lng--zh" hidden>路书碎碎念</span></h1>
+        <p class="hero-sub"><span class="trip-lng trip-lng--en">IDs, pacing, hydration, altitude shuffles — distilled from buddies who bounced both regions.</span><span class="trip-lng trip-lng--zh" hidden>证件、作息、补水、海拔切换——来自朋友们的踩线总结。</span></p>
       </div>
     </div>
   </div>
   <div class="section" style="padding-top:32px">
-    <div class="sec-header">
-      <div class="sec-tag">Essential Reading</div>
-      <h2 class="sec-title">Before You Go</h2>
-    </div>
     <div class="tips-grid" id="tips-grid"></div>
   </div>
 </section>
 
-<!-- ─── PAGE: BOOKING CHECKLIST ─── -->
 <section id="page-checklist" class="page">
   <div class="hero">
-    <img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=1600&q=80" alt="Booking checklist" onerror="this.src='https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=1600&q=80'">
+    <img src="https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=1600&q=80" alt="" onerror="this.style.display='none'">
     <div class="hero-overlay">
       <div class="hero-content">
-        <div class="hero-tag">Planning</div>
-        <h1 class="hero-title">Booking Checklist</h1>
-        <p class="hero-sub">Everything you need to book — in priority order. Tick off as you go.</p>
+        <div class="hero-tag"><span class="trip-lng trip-lng--en">Bookings</span><span class="trip-lng trip-lng--zh" hidden>预订</span></div>
+        <h1 class="hero-title"><span class="trip-lng trip-lng--en">Living checklist</span><span class="trip-lng trip-lng--zh" hidden>活清单</span></h1>
+        <p class="hero-sub"><span class="trip-lng trip-lng--en">Grouped by urgency out of the box — switch to <strong>City</strong> to mirror the Chongqing/Xinjiang split until dates freeze.</span><span class="trip-lng trip-lng--zh" hidden>默认按紧急度排列 —— 在日期待定阶段可切换到 <strong>城市/区域</strong> 对齐重庆新疆分段。</span></p>
       </div>
     </div>
   </div>
   <div class="section" style="padding-top:0">
     <div class="cl-sort-bar">
-      <button class="cl-sort-btn active" data-sort="urgency"  onclick="setClSort('urgency')">🔥 Urgency</button>
-      <button class="cl-sort-btn"        data-sort="category" onclick="setClSort('category')">🗂 Category</button>
-      <button class="cl-sort-btn"        data-sort="date"     onclick="setClSort('date')">📅 Travel Date</button>
-      <button class="cl-sort-btn"        data-sort="status"   onclick="setClSort('status')">✅ Status</button>
+      <button class="cl-sort-btn active" data-sort="urgency"  onclick="setClSort('urgency')"><span data-ui="checklist.sort.urgency"></span></button>
+      <button class="cl-sort-btn"        data-sort="category" onclick="setClSort('category')"><span data-ui="checklist.sort.category"></span></button>
+      <button class="cl-sort-btn"        data-sort="city" onclick="setClSort('city')"><span data-ui="checklist.sort.city"></span></button>
+      <button class="cl-sort-btn"        data-sort="status" onclick="setClSort('status')"><span data-ui="checklist.sort.status"></span></button>
     </div>
     <div class="cl-page-header">
       <div style="display:flex;justify-content:space-between;align-items:center">
         <div>
-          <div style="font-size:17px;font-weight:700;margin-bottom:2px">Trip Bookings — December 7–21, 2026</div>
-          <div class="cl-progress-label" id="cl-progress-label">Loading…</div>
+          <div style="font-size:17px;font-weight:700;margin-bottom:2px" data-ui="checklist.header"></div>
+          <div class="cl-progress-label" id="cl-progress-label" data-ui="checklist.loading"></div>
         </div>
-        <button class="btn btn-outline" onclick="resetChecklist()" style="font-size:12px;padding:6px 14px">Reset all</button>
+        <button class="btn btn-outline" onclick="resetChecklist()" style="font-size:12px;padding:6px 14px" data-ui="checklist.reset"></button>
       </div>
       <div class="cl-progress-bar" style="margin-top:10px"><div class="cl-progress-fill" id="cl-progress-fill" style="width:0%"></div></div>
     </div>
@@ -493,317 +410,290 @@
 
 </main>
 
-<!-- ═══ MODAL: HISTORY ═══ -->
 <div class="modal-overlay" id="historyModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal">
-    <div class="modal-title">Edit History</div>
+    <div class="modal-title" data-ui="modal.historyTitle"></div>
     <div id="historyList"></div>
     <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeHistory()">Close</button>
+      <button class="btn btn-outline" onclick="closeHistory()" data-ui="modal.historyClose"></button>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: DIFF / ROLLBACK ═══ -->
 <div class="modal-overlay" id="diffModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal">
-    <div class="modal-title" id="diffTitle">Changes since this save</div>
+    <div class="modal-title" id="diffTitle"></div>
     <div id="diffList"></div>
     <div class="modal-actions">
-      <button class="btn btn-outline" onclick="closeDiff()">Cancel</button>
-      <button class="btn btn-red" id="rollbackBtn" onclick="doRollback()">Roll back to this version</button>
+      <button class="btn btn-outline" onclick="closeDiff()" data-ui="modal.diffCancel"></button>
+      <button class="btn btn-red" id="rollbackBtn" onclick="doRollback()" data-ui="modal.diffRollback"></button>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: REVERT CONFIRM ═══ -->
 <div class="modal-overlay" id="revertModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal">
-    <div class="modal-title">Revert All Changes?</div>
-    <p class="modal-sub">This will restore the page to its original state and clear all edit history. This cannot be undone.</p>
+    <div class="modal-title" data-ui="modal.revertTitle"></div>
+    <p class="modal-sub" data-ui="modal.revertSub"></p>
     <div class="modal-actions">
-      <button class="btn btn-outline" onclick="document.getElementById('revertModal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-red" onclick="doRevertAll()">Yes, Revert Everything</button>
+      <button class="btn btn-outline" onclick="document.getElementById('revertModal').classList.remove('open')" data-ui="modal.revertKeep"></button>
+      <button class="btn btn-red" onclick="doRevertAll()" data-ui="modal.revertDo"></button>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: PDF EXPORT ═══ -->
 <div class="modal-overlay" id="pdfModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal">
-    <div class="modal-title">Export to PDF</div>
-    <p class="modal-sub">Choose a format for your trip planner PDF.</p>
+    <div class="modal-title" data-ui="modal.pdfTitle"></div>
+    <p class="modal-sub" data-ui="modal.pdfSub"></p>
     <div class="pdf-options">
       <button class="pdf-opt" onclick="document.getElementById('pdfModal').classList.remove('open');doExportPDF(true)">
         <div class="pdf-opt-icon">🖥</div>
-        <div class="pdf-opt-name">Landscape</div>
-        <div class="pdf-opt-desc">Wider pages — tables & maps fill the page. Great for printing or screen reading on a laptop.</div>
+        <div class="pdf-opt-name" data-ui="modal.pdfLandscape"></div>
+        <div class="pdf-opt-desc" data-ui="modal.pdfLandscapeDesc"></div>
       </button>
       <button class="pdf-opt" onclick="document.getElementById('pdfModal').classList.remove('open');doExportPDF(false)">
         <div class="pdf-opt-icon">📱</div>
-        <div class="pdf-opt-name">Portrait</div>
-        <div class="pdf-opt-desc">Taller pages — mobile-friendly. Best for reading on your phone or a tablet.</div>
+        <div class="pdf-opt-name" data-ui="modal.pdfPortrait"></div>
+        <div class="pdf-opt-desc" data-ui="modal.pdfPortraitDesc"></div>
       </button>
     </div>
     <div class="modal-actions">
-      <button type="button" class="btn btn-outline" onclick="document.getElementById('pdfModal').classList.remove('open')">Cancel</button>
+      <button type="button" class="btn btn-outline" onclick="document.getElementById('pdfModal').classList.remove('open')" data-ui="modal.pdfCancel"></button>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: BACKUP / RESTORE ═══ -->
 <div class="modal-overlay" id="backupModal" onclick="if(event.target===this)closeBackupModal()">
   <div class="modal">
-    <div class="modal-title">Backup & restore</div>
-    <p class="modal-sub">Download everything saved on this device — flight board changes, checklist progress, page edits, and history — or load a file you saved earlier.</p>
+    <div class="modal-title" data-ui="modal.backupTitle"></div>
+    <p class="modal-sub" data-ui="modal.backupSub"></p>
     <div class="pdf-options">
       <button type="button" class="pdf-opt" onclick="doBackupDownload()">
         <div class="pdf-opt-icon">⬇️</div>
-        <div class="pdf-opt-name">Back up</div>
-        <div class="pdf-opt-desc">Download a JSON file you can store in Files, iCloud Drive, or email. Use it to move your data to another device or keep a snapshot.</div>
+        <div class="pdf-opt-name" data-ui="modal.backupDownload"></div>
+        <div class="pdf-opt-desc" data-ui="modal.backupDownloadDesc"></div>
       </button>
       <button type="button" class="pdf-opt" onclick="startBackupRestore()">
         <div class="pdf-opt-icon">⬆️</div>
-        <div class="pdf-opt-name">Restore</div>
-        <div class="pdf-opt-desc">Choose a backup file exported from this app. Current data on this device will be replaced, then the page reloads.</div>
+        <div class="pdf-opt-name" data-ui="modal.backupRestore"></div>
+        <div class="pdf-opt-desc" data-ui="modal.backupRestoreDesc"></div>
       </button>
     </div>
     <div class="modal-actions">
-      <button type="button" class="btn btn-outline" onclick="closeBackupModal()">Cancel</button>
+      <button type="button" class="btn btn-outline" onclick="closeBackupModal()" data-ui="modal.pdfCancel"></button>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: ADD FLIGHT ═══ -->
 <div class="modal-overlay" id="flightAddModal" onclick="if(event.target===this)closeFlightAddModal()">
   <div class="modal flight-modal">
-    <div class="modal-title" id="flight-modal-title">Add flight</div>
-    <p class="modal-sub" id="flight-modal-sub">Saved only on this device. Enter departure and optional arrival in your local timezone; times are stored in UTC.</p>
+    <div class="modal-title" id="flight-modal-title"></div>
+    <p class="modal-sub" id="flight-modal-sub" data-ui="flight.modal.sub" data-ui-edit="flight.modal.subEdit"></p>
     <div class="flight-form-row">
       <div>
-        <label class="flight-modal-label" for="flight-f-dep-ap">From</label>
+        <label class="flight-modal-label" for="flight-f-dep-ap" data-ui="flight.label.from"></label>
         <div class="airport-ac-wrap">
-          <input id="flight-f-dep-ap" class="flight-modal-input airport-ac-input" type="text" placeholder="City, name, or code" maxlength="48" autocomplete="off" spellcheck="false">
+          <input id="flight-f-dep-ap" class="flight-modal-input airport-ac-input" type="text" maxlength="48" autocomplete="off" spellcheck="false" data-ui-ph="flight.ph.cityCode">
           <ul class="airport-ac-list" hidden role="listbox" aria-label="Airport suggestions"></ul>
         </div>
       </div>
       <div>
-        <label class="flight-modal-label" for="flight-f-arr-ap">To</label>
+        <label class="flight-modal-label" for="flight-f-arr-ap" data-ui="flight.label.to"></label>
         <div class="airport-ac-wrap">
-          <input id="flight-f-arr-ap" class="flight-modal-input airport-ac-input" type="text" placeholder="Final airport" maxlength="48" autocomplete="off" spellcheck="false">
+          <input id="flight-f-arr-ap" class="flight-modal-input airport-ac-input" type="text" maxlength="48" autocomplete="off" spellcheck="false" data-ui-ph="flight.ph.finalAp">
           <ul class="airport-ac-list" hidden role="listbox" aria-label="Airport suggestions"></ul>
         </div>
       </div>
     </div>
-    <label class="flight-modal-label" for="flight-f-airline-search">Airline</label>
+    <label class="flight-modal-label" for="flight-f-airline-search" data-ui="flight.label.airline"></label>
     <div class="airline-ac-wrap airport-ac-wrap">
       <input type="hidden" id="flight-f-airline-code" value="">
-      <input id="flight-f-airline-search" class="flight-modal-input airline-ac-input" type="text" placeholder="Airline name or code" maxlength="64" autocomplete="off" spellcheck="false" aria-label="Airline">
+      <input id="flight-f-airline-search" class="flight-modal-input airline-ac-input" type="text" maxlength="64" autocomplete="off" spellcheck="false" aria-label="Airline" data-ui-ph="flight.ph.airlineCode">
       <ul class="airline-ac-list airport-ac-list" hidden role="listbox" aria-label="Airline suggestions"></ul>
     </div>
-    <label class="flight-modal-label" for="flight-f-flight-digits">Flight number (digits)</label>
-    <input id="flight-f-flight-digits" class="flight-modal-input" type="text" inputmode="numeric" placeholder="1–4 digits" maxlength="4" pattern="[0-9]{1,4}" autocomplete="off">
+    <label class="flight-modal-label" for="flight-f-flight-digits" data-ui="flight.label.flightDigits"></label>
+    <input id="flight-f-flight-digits" class="flight-modal-input" type="text" inputmode="numeric" maxlength="4" pattern="[0-9]{1,4}" autocomplete="off" data-ui-ph="flight.ph.flightDigits">
     <div class="flight-datetime-row">
       <div class="flight-datetime-field">
-        <label class="flight-modal-label" for="flight-f-dep">Departure (local)</label>
+        <label class="flight-modal-label" for="flight-f-dep" data-ui="flight.label.departure"></label>
         <input id="flight-f-dep" class="flight-modal-input flight-modal-datetime" type="datetime-local">
       </div>
       <div class="flight-datetime-field">
-        <label class="flight-modal-label" for="flight-f-arr">Arrival (local, optional)</label>
+        <label class="flight-modal-label" for="flight-f-arr" data-ui="flight.label.arrival"></label>
         <input id="flight-f-arr" class="flight-modal-input flight-modal-datetime" type="datetime-local">
       </div>
     </div>
-    <label class="flight-modal-label" for="flight-f-connection">Connection</label>
-    <select id="flight-f-connection" class="flight-modal-input flight-modal-select">
-      <option value="direct">Direct (single leg)</option>
-      <option value="same_pnr">Same booking / protected connection</option>
-      <option value="self_transfer">Self-transfer (separate tickets)</option>
-      <option value="overnight">Overnight or long layover</option>
-      <option value="open_jaw">Open jaw / multi-city</option>
-    </select>
+    <label class="flight-modal-label" for="flight-f-connection" data-ui="flight.label.connection"></label>
+    <select id="flight-f-connection" class="flight-modal-input flight-modal-select"></select>
     <div id="flight-conn-block" class="flight-conn-fields" hidden>
-      <div class="flight-conn-block-title">Connection flight</div>
+      <div class="flight-conn-block-title" data-ui="flight.connBlockTitle"></div>
       <div class="flight-form-row">
         <div>
-          <label class="flight-modal-label" for="flight-f-conn-dep-ap">From</label>
+          <label class="flight-modal-label" for="flight-f-conn-dep-ap" data-ui="flight.label.connFrom"></label>
           <div class="airport-ac-wrap">
-            <input id="flight-f-conn-dep-ap" class="flight-modal-input airport-ac-input" type="text" placeholder="Prior leg arrival" maxlength="48" autocomplete="off" spellcheck="false">
+            <input id="flight-f-conn-dep-ap" class="flight-modal-input airport-ac-input" type="text" maxlength="48" autocomplete="off" spellcheck="false" data-ui-ph="flight.ph.connPrior">
             <ul class="airport-ac-list" hidden role="listbox" aria-label="Airport suggestions"></ul>
           </div>
         </div>
         <div>
-          <label class="flight-modal-label" for="flight-f-conn-arr-ap">Connect at</label>
+          <label class="flight-modal-label" for="flight-f-conn-arr-ap" data-ui="flight.label.connHub"></label>
           <div class="airport-ac-wrap">
-            <input id="flight-f-conn-arr-ap" class="flight-modal-input airport-ac-input" type="text" placeholder="Hub airport" maxlength="48" autocomplete="off" spellcheck="false">
+            <input id="flight-f-conn-arr-ap" class="flight-modal-input airport-ac-input" type="text" maxlength="48" autocomplete="off" spellcheck="false" data-ui-ph="flight.ph.connHub">
             <ul class="airport-ac-list" hidden role="listbox" aria-label="Airport suggestions"></ul>
           </div>
         </div>
       </div>
-      <label class="flight-modal-label" for="flight-f-conn-airline-search">Connection airline</label>
+      <label class="flight-modal-label" for="flight-f-conn-airline-search" data-ui="flight.label.connAirline"></label>
       <div class="airline-ac-wrap airport-ac-wrap">
         <input type="hidden" id="flight-f-conn-airline-code" value="">
-        <input id="flight-f-conn-airline-search" class="flight-modal-input airline-ac-input" type="text" placeholder="Airline name or code" maxlength="64" autocomplete="off" spellcheck="false" aria-label="Connection airline">
+        <input id="flight-f-conn-airline-search" class="flight-modal-input airline-ac-input" type="text" maxlength="64" autocomplete="off" spellcheck="false" aria-label="Connection airline" data-ui-ph="flight.ph.airlineCode">
         <ul class="airline-ac-list airport-ac-list" hidden role="listbox" aria-label="Airline suggestions"></ul>
       </div>
-      <label class="flight-modal-label" for="flight-f-conn-flight-digits">Connection flight number</label>
-      <input id="flight-f-conn-flight-digits" class="flight-modal-input" type="text" inputmode="numeric" placeholder="1–4 digits" maxlength="4" pattern="[0-9]{1,4}" autocomplete="off">
+      <label class="flight-modal-label" for="flight-f-conn-flight-digits" data-ui="flight.label.connFlightDigits"></label>
+      <input id="flight-f-conn-flight-digits" class="flight-modal-input" type="text" inputmode="numeric" maxlength="4" pattern="[0-9]{1,4}" autocomplete="off" data-ui-ph="flight.ph.flightDigits">
       <div class="flight-datetime-row">
         <div class="flight-datetime-field">
-          <label class="flight-modal-label" for="flight-f-conn-departure">Connection departs (local)</label>
+          <label class="flight-modal-label" for="flight-f-conn-departure" data-ui="flight.label.connDep"></label>
           <input id="flight-f-conn-departure" class="flight-modal-input flight-modal-datetime" type="datetime-local">
         </div>
         <div class="flight-datetime-field">
-          <label class="flight-modal-label" for="flight-f-conn-arrival">Connection arrives (local)</label>
+          <label class="flight-modal-label" for="flight-f-conn-arrival" data-ui="flight.label.connArr"></label>
           <input id="flight-f-conn-arrival" class="flight-modal-input flight-modal-datetime" type="datetime-local">
         </div>
       </div>
     </div>
     <div class="modal-actions" style="margin-top:18px">
-      <button type="button" class="btn btn-outline" onclick="closeFlightAddModal()">Cancel</button>
-      <button type="button" class="btn btn-blue" id="flight-modal-submit" onclick="submitFlightAdd()">Save flight</button>
+      <button type="button" class="btn btn-outline" id="flight-modal-cancel" onclick="closeFlightAddModal()" data-ui="flight.cancel"></button>
+      <button type="button" class="btn btn-blue" id="flight-modal-submit" onclick="submitFlightAdd()" data-ui="flight.save"></button>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: CHECKLIST RESET ═══ -->
 <div class="modal-overlay" id="checklistResetModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal">
-    <div class="modal-title">Reset Checklist?</div>
-    <p class="modal-sub">All items will be unchecked and your checklist progress will be cleared.</p>
+    <div class="modal-title" data-ui="modal.checklistResetTitle"></div>
+    <p class="modal-sub" data-ui="modal.checklistResetSub"></p>
     <div class="modal-actions">
-      <button class="btn btn-outline" onclick="document.getElementById('checklistResetModal').classList.remove('open')">Cancel</button>
-      <button class="btn btn-red" onclick="document.getElementById('checklistResetModal').classList.remove('open');doResetChecklist()">Reset All Items</button>
+      <button class="btn btn-outline" onclick="document.getElementById('checklistResetModal').classList.remove('open')" data-ui="modal.revertKeep"></button>
+      <button class="btn btn-red" onclick="document.getElementById('checklistResetModal').classList.remove('open');doResetChecklist()" data-ui="modal.checklistResetDo"></button>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: ALERT ═══ -->
 <div class="modal-overlay" id="alertModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal">
     <div class="modal-title" id="alertModalTitle">Notice</div>
     <p class="modal-sub" id="alertModalMsg"></p>
     <div class="modal-actions">
-      <button class="btn btn-blue" onclick="document.getElementById('alertModal').classList.remove('open')">OK</button>
+      <button class="btn btn-blue" onclick="document.getElementById('alertModal').classList.remove('open')" data-ui="modal.alertOk"></button>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: VERSION HISTORY ═══ -->
 <div class="modal-overlay" id="versionModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal" style="max-width:600px">
-    <div class="modal-title">Version History</div>
-    <p class="modal-sub">All updates to this trip planner, newest first.</p>
+    <div class="modal-title" data-ui="modal.versionTitle"></div>
+    <p class="modal-sub" data-ui="modal.versionSub"></p>
     <div id="versionList" style="max-height:60vh;overflow-y:auto;margin:0 -4px;padding:0 4px"></div>
     <div class="modal-actions">
-      <button class="btn btn-blue" onclick="document.getElementById('versionModal').classList.remove('open')">Close</button>
+      <button class="btn btn-blue" onclick="document.getElementById('versionModal').classList.remove('open')" data-ui="modal.versionClose"></button>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: WELCOME ═══ -->
 <div class="modal-overlay" id="welcomeModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal" style="max-width:500px">
     <div style="text-align:center;margin-bottom:22px">
       <div style="font-size:44px;margin-bottom:12px">🗺️</div>
-      <div class="modal-title">Welcome to your trip planner!</div>
-      <p class="modal-sub" style="margin-bottom:0">Your Tasmania &amp; Melbourne adventure, all in one place.</p>
+      <div class="modal-title" data-ui="welcome.title"></div>
+      <p class="modal-sub" style="margin-bottom:0" data-ui="welcome.sub"></p>
     </div>
     <div class="welcome-items">
       <div class="welcome-item">
         <div class="welcome-icon">🤖</div>
         <div>
-          <div class="welcome-item-title">Built with Claude AI</div>
-          <div class="welcome-item-desc">Share this page in the Telegram group if you'd like any changes to the itinerary — Claude can update it.</div>
+          <div class="welcome-item-title" data-ui="welcome.aiTitle"></div>
+          <div class="welcome-item-desc" data-ui="welcome.aiDesc"></div>
         </div>
       </div>
       <div class="welcome-item">
         <div class="welcome-icon">💬</div>
         <div>
-          <div class="welcome-item-title">Tap the dotted underlines</div>
-          <div class="welcome-item-desc">Throughout the planner, <span style="border-bottom:1px dashed #86868b;cursor:help">dotted text</span> has extra tips and details — tap or hover to reveal them.</div>
+          <div class="welcome-item-title" data-ui="welcome.tooltipsTitle"></div>
+          <div class="welcome-item-desc" data-ui="welcome.tooltipsDesc"></div>
         </div>
       </div>
       <div class="welcome-item">
         <div class="welcome-icon">✏️</div>
         <div>
-          <div class="welcome-item-title">Edit mode</div>
-          <div class="welcome-item-desc">Tap the <strong>✏️ Edit</strong> button in the toolbar to personalise any figures or notes. Changes are saved locally on your device only.</div>
+          <div class="welcome-item-title" data-ui="welcome.editTitle"></div>
+          <div class="welcome-item-desc" data-ui="welcome.editDesc"></div>
         </div>
       </div>
       <div class="welcome-item">
         <div class="welcome-icon">📄</div>
         <div>
-          <div class="welcome-item-title">Export to PDF</div>
-          <div class="welcome-item-desc">Hit the <strong>↓ PDF</strong> button to export a portable offline version — great for the trip itself.</div>
+          <div class="welcome-item-title" data-ui="welcome.pdfTitle"></div>
+          <div class="welcome-item-desc" data-ui="welcome.pdfDesc"></div>
         </div>
       </div>
     </div>
     <div class="modal-actions" style="justify-content:center;margin-top:24px">
-      <button class="btn btn-blue" onclick="document.getElementById('welcomeModal').classList.remove('open')" style="padding:12px 36px;font-size:15px">Let's go →</button>
+      <button class="btn btn-blue" onclick="document.getElementById('welcomeModal').classList.remove('open')" style="padding:12px 36px;font-size:15px" data-ui="welcome.cta"></button>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: ADD TO HOME SCREEN ═══ -->
 <div class="modal-overlay" id="addToHomeModal" onclick="if(event.target===this)dismissAddToHomeHint()">
   <div class="modal" style="max-width:500px">
     <div style="text-align:center;margin-bottom:18px">
       <div style="font-size:42px;margin-bottom:10px">📲</div>
-      <div class="modal-title">Add to your Home Screen</div>
-      <p class="modal-sub" style="margin-bottom:0">Put this trip planner on your Home Screen so it opens full&nbsp;screen like other apps — quick to launch and easy to find.</p>
+      <div class="modal-title" data-ui="addhome.title"></div>
+      <p class="modal-sub" style="margin-bottom:0" data-ui="addhome.sub"></p>
     </div>
     <div class="welcome-items">
       <div class="welcome-item">
         <div class="welcome-icon">📱</div>
         <div>
-          <div class="welcome-item-title">iPhone or iPad</div>
-          <div class="welcome-item-desc">In Safari, tap the <strong>Share</strong> button <span style="opacity:.85">(square with an arrow)</span>, scroll down, tap <strong>Add to Home Screen</strong>, then <strong>Add</strong>.</div>
+          <div class="welcome-item-title"><span class="trip-lng trip-lng--en">iPhone / iPad</span><span class="trip-lng trip-lng--zh" hidden>iPhone / iPad</span></div>
+          <div class="welcome-item-desc"><span class="trip-lng trip-lng--en">Safari → Share → Add to Home Screen.</span><span class="trip-lng trip-lng--zh" hidden>Safari → 分享 → 添加到主屏幕。</span></div>
         </div>
       </div>
       <div class="welcome-item">
         <div class="welcome-icon">🤖</div>
         <div>
           <div class="welcome-item-title">Android</div>
-          <div class="welcome-item-desc">In Chrome, tap <strong>⋮</strong> in the corner, then choose <strong>Add to Home screen</strong> or <strong>Install app</strong>, and confirm.</div>
-        </div>
-      </div>
-      <div class="welcome-item">
-        <div class="welcome-icon">💻</div>
-        <div>
-          <div class="welcome-item-title">Computer</div>
-          <div class="welcome-item-desc">Look for an <strong>Install</strong> or <strong>plus</strong> icon in or near the address bar and follow the prompts.</div>
+          <div class="welcome-item-desc"><span class="trip-lng trip-lng--en">Chrome ⋮ → Add to Home screen / Install app.</span><span class="trip-lng trip-lng--zh" hidden>Chrome 菜单 → 添加到主屏幕 / 安装应用。</span></div>
         </div>
       </div>
     </div>
-    <p class="modal-sub" style="margin-top:18px;margin-bottom:0;font-size:13px">This tip won’t show again after you close it.</p>
     <div class="modal-actions" style="justify-content:center;margin-top:22px">
-      <button type="button" class="btn btn-blue" onclick="dismissAddToHomeHint()" style="padding:12px 36px;font-size:15px">Got it</button>
+      <button type="button" class="btn btn-blue" onclick="dismissAddToHomeHint()" style="padding:12px 36px;font-size:15px" data-ui="addhome.cta"></button>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: WHAT'S NEW ═══ -->
 <div class="modal-overlay" id="whatsNewModal" onclick="if(event.target===this)this.classList.remove('open')">
   <div class="modal" style="max-width:500px">
-    <div class="modal-title">✨ What's new</div>
-    <p class="modal-sub" id="whatsNewSub">Here's what changed since your last visit.</p>
+    <div class="modal-title" data-ui="whatsnew.title"></div>
+    <p class="modal-sub" id="whatsNewSub" data-ui="whatsnew.sub"></p>
     <div id="whatsNewList"></div>
     <div class="modal-actions">
-      <button class="btn btn-blue" onclick="document.getElementById('whatsNewModal').classList.remove('open')">Got it</button>
+      <button class="btn btn-blue" onclick="document.getElementById('whatsNewModal').classList.remove('open')" data-ui="whatsnew.ok"></button>
     </div>
   </div>
 </div>
 
-<!-- ═══ MODAL: MERGE CONFLICTS ═══ -->
 <div class="modal-overlay" id="conflictModal">
   <div class="modal" style="max-width:600px">
-    <div class="modal-title">⚠️ Update Conflicts</div>
+    <div class="modal-title">⚠️</div>
     <div class="conflict-banner" id="conflictBanner"></div>
     <div id="conflictList" style="max-height:52vh;overflow-y:auto;margin:0 -4px;padding:0 4px"></div>
     <div class="modal-actions">
-      <button class="btn btn-outline" onclick="resolveAllConflicts('user')">Keep all mine</button>
-      <button class="btn btn-outline" onclick="resolveAllConflicts('dev')">Use all new</button>
-      <button class="btn btn-blue" onclick="saveConflictChoices()">Save choices</button>
+      <button class="btn btn-outline" onclick="resolveAllConflicts('user')" data-ui="modal.conflictMine"></button>
+      <button class="btn btn-outline" onclick="resolveAllConflicts('dev')" data-ui="modal.conflictNew"></button>
+      <button class="btn btn-blue" onclick="saveConflictChoices()" data-ui="modal.conflictSave"></button>
     </div>
   </div>
 </div>

@@ -2,8 +2,14 @@
 
 let APP_VERSION;
 let VERSIONS;
-let DAYS_TAS1, DAYS_TAS2, DAYS_MELB;
+let DAYS_CQ, DAYS_XJ;
 let STAYS, CHECKLIST, CL_META, COSTS, TIPS;
+let TRIP_META = {};
+let MAPS_DATA = {};
+let PAGE_SEED = {};
+let UI_EN = {};
+let UI_ZH = {};
+let DOM_DEFAULT_HTML = {};
 let FLIGHTS = [];
 let FLIGHTS_LIVE = null;
 let flightUserExtras = [];
@@ -14,6 +20,7 @@ let _flightCardDotsObserver = null;
 const FLIGHT_OVERLAY_KEY = 'tripleFlightOverlay';
 const FLIGHT_BOARD_COLLAPSED_KEY = 'tripleFlightBoardCollapsed';
 const CL_SORT_KEY = 'tripleClSort';
+const LANG_KEY = 'tripleUiLang';
 const BACKUP_FORMAT = 'triple-backup';
 const BACKUP_VERSION = 1;
 const ADD_TO_HOME_DISMISSED_KEY = 'tripAddToHomeDismissed';
@@ -30,7 +37,128 @@ const TRIPLE_BACKUP_KEYS = [
   'tripLastSeenVersion',
   ADD_TO_HOME_DISMISSED_KEY,
   CL_SORT_KEY,
+  LANG_KEY,
 ];
+
+let APP_LANG = 'en';
+
+function loadLangPreference() {
+  try {
+    const v = localStorage.getItem(LANG_KEY);
+    return v === 'zh' ? 'zh' : 'en';
+  } catch {
+    return 'en';
+  }
+}
+
+APP_LANG = loadLangPreference();
+
+function Tx(v) {
+  if (v == null || v === '') return '';
+  if (typeof v === 'string') return v;
+  if (typeof v === 'object') {
+    if (APP_LANG === 'zh') return v.zh != null ? String(v.zh) : String(v.en != null ? v.en : '');
+    return v.en != null ? String(v.en) : String(v.zh != null ? v.zh : '');
+  }
+  return String(v);
+}
+
+function Ui(key) {
+  const b = APP_LANG === 'zh' ? UI_ZH : UI_EN;
+  const fb = APP_ENGLISH_FALLBACK_LOOKUP(key);
+  return (b[key] != null ? b[key] : UI_EN[key]) || fb || key;
+}
+
+function UI_ENGLISH_FALLBACK_LOOKUP(key) {
+  switch (key) {
+    case 'flight.modal.titleAdd':
+      return 'Add flight';
+    case 'flight.modal.titleEdit':
+      return 'Edit flight';
+    case 'flight.err.depAp':
+      return 'Enter both airport codes (3 letters) and a departure date & time. Use the suggestions list or type a valid IATA code.';
+    case 'flight.modal.titleAdd':
+      return 'Add flight';
+    case 'flight.modal.titleEdit':
+      return 'Edit flight';
+    case 'flight.saveChanges':
+      return 'Save changes';
+    default:
+      return '';
+  }
+}
+
+function escapeHtml(s) {
+  return String(s || '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** Two inline spans toggled via refreshLangClasses — keeps markup out of gigantic index.html blobs. */
+function lngMarkup(pair) {
+  const o = typeof pair === 'object' && pair.en != null ? pair : { en: String(pair), zh: String(pair) };
+  return (
+    `<span class="trip-lng trip-lng--en"${APP_LANG === 'zh' ? ' hidden' : ''}>${escapeHtml(o.en)}</span>` +
+    `<span class="trip-lng trip-lng--zh"${APP_LANG === 'zh' ? '' : ' hidden'}>${escapeHtml(o.zh)}</span>`
+  );
+}
+
+function refreshLangClasses() {
+  const zh = APP_LANG === 'zh';
+  document.documentElement.lang = zh ? 'zh-Hans' : 'en';
+  document.querySelectorAll('.trip-lng--en').forEach((el) => {
+    el.hidden = zh;
+  });
+  document.querySelectorAll('.trip-lng--zh').forEach((el) => {
+    el.hidden = !zh;
+  });
+}
+
+function applyUiAnchors() {
+  document.querySelectorAll('[data-ui]').forEach((el) => {
+    const key = el.getAttribute('data-ui');
+    const v = Ui(key);
+    if (v == null) return;
+    if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') el.placeholder = v;
+    else if (/</.test(v)) el.innerHTML = v;
+    else el.textContent = v;
+  });
+}
+
+function refreshLangSidebarToggle() {
+  const enBtn = document.getElementById('lang-btn-en');
+  const zhBtn = document.getElementById('lang-btn-zh');
+  if (enBtn) enBtn.classList.toggle('lang-btn--active', APP_LANG !== 'zh');
+  if (zhBtn) zhBtn.classList.toggle('lang-btn--active', APP_LANG === 'zh');
+}
+
+function rerenderTripText() {
+  renderDays(DAYS_CQ, 'days-cq');
+  renderDays(DAYS_XJ, 'days-xj');
+  renderStays();
+  renderCostTable();
+  renderTips();
+  renderChecklist();
+  refreshFlightChromeI18n();
+  renderTripCountdownBanner();
+  updateCharts();
+  renderFlights();
+  updateFlightBoardToggleLabelOnly();
+}
+
+window.setTripLang = function setTripLang(lang) {
+  APP_LANG = lang === 'zh' ? 'zh' : 'en';
+  try {
+    localStorage.setItem(LANG_KEY, APP_LANG);
+  } catch (_) { /* ignore */ }
+  refreshLangClasses();
+  applyUiAnchors();
+  refreshLangSidebarToggle();
+  refreshPlannerChromeI18n();
+  rerenderTripText();
+};
 const FLIGHT_PATCH_KEYS = [
   'airline',
   'airlineCode',
@@ -48,13 +176,93 @@ const FLIGHT_PATCH_KEYS = [
   'connDepartureUtc',
   'connArrivalUtc',
 ];
-const FLIGHT_CONNECTION_LABELS = {
-  direct: 'Direct',
-  same_pnr: 'Same booking',
-  self_transfer: 'Self-transfer',
-  overnight: 'Long layover',
-  open_jaw: 'Multi-city',
-};
+const FLIGHT_CONN_ORDER = ['direct', 'same_pnr', 'self_transfer', 'overnight', 'open_jaw'];
+
+function refreshFlightConnectionSelect() {
+  const sel = document.getElementById('flight-f-connection');
+  if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = FLIGHT_CONN_ORDER.map(
+    k => `<option value="${k}">${escapeHtml(Ui('flight.conn.' + k))}</option>`,
+  ).join('');
+  if (FLIGHT_CONN_ORDER.includes(cur)) sel.value = cur;
+  else sel.value = 'direct';
+  updateConnectionFormVisibility();
+}
+
+function refreshFlightModalI18n() {
+  document.querySelectorAll('#flightAddModal .flight-modal-label[data-ui]').forEach(el => {
+    const key = el.getAttribute('data-ui');
+    el.textContent = Ui(key || '');
+  });
+  document.querySelectorAll('#flightAddModal .flight-modal-input[data-ui-ph]').forEach(el => {
+    const key = el.getAttribute('data-ui-ph');
+    el.placeholder = Ui(key || '');
+  });
+  const sub = document.getElementById('flight-modal-sub');
+  if (sub && sub.hasAttribute('data-ui')) sub.textContent = Ui(sub.getAttribute('data-ui'));
+  const connTitle = document.querySelector('#flight-conn-block .flight-conn-block-title');
+  if (connTitle && connTitle.hasAttribute('data-ui')) connTitle.textContent = Ui(connTitle.getAttribute('data-ui'));
+  const c1 = document.getElementById('flight-modal-cancel');
+  if (c1 && c1.hasAttribute('data-ui')) c1.textContent = Ui(c1.getAttribute('data-ui'));
+  const c2 = document.getElementById('flight-modal-submit');
+  if (c2 && c2.hasAttribute('data-ui')) c2.textContent = Ui(c2.getAttribute('data-ui'));
+}
+
+function formatSidebarBadgeSub(tm) {
+  const days =
+    tm && tm.totalDays != null ? String(tm.totalDays) : String((DAYS_CQ || []).length + (DAYS_XJ || []).length);
+  const people = tm && tm.groupSize != null ? String(tm.groupSize) : '4';
+  let s = Ui('badge.sub');
+  return s.replace(/\{days\}/g, days).replace(/\{people\}/g, people);
+}
+
+function wireChromeAriaLabels() {
+  const tripTools = Ui('menu.ariaTripTools');
+  ['mobileTopCog', 'desktopTopCog'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el && tripTools) el.setAttribute('aria-label', tripTools);
+  });
+  const pdfLbl = Ui('menu.ariaPdf');
+  document.querySelectorAll('.sb-pdf-btn, .mobile-header-pdf').forEach(el => {
+    if (pdfLbl) el.setAttribute('aria-label', pdfLbl);
+  });
+}
+
+function refreshPlannerChromeI18n() {
+  const tm = TRIP_META || {};
+  const sym = tm.currencySymbol || '¥';
+
+  document.querySelectorAll('[data-trip-badge]').forEach(el => {
+    el.textContent = Ui('badge.private');
+  });
+  document.querySelectorAll('[data-trip-sb-sub]').forEach(el => {
+    el.textContent = formatSidebarBadgeSub(tm);
+  });
+
+  const ppStat = document.querySelector('.stat-lbl[data-stat-key="pp"]');
+  if (ppStat) {
+    ppStat.textContent = (Ui('stat.pp') || '').replace(/\{cur\}/g, sym);
+  }
+
+  document.querySelectorAll('[data-ui-tools]').forEach(el => {
+    const k = el.getAttribute('data-ui-tools');
+    if (k) el.textContent = Ui(k);
+  });
+
+  refreshFlightChromeI18n();
+  refreshFlightModalI18n();
+  refreshFlightConnectionSelect();
+
+  ['mobile-header-title-inner', 'auth-title-trip'].forEach(id => {
+    const el = document.getElementById(id);
+    if (!el || !el.hasAttribute('data-ui-html')) return;
+    el.innerHTML = Ui(el.getAttribute('data-ui-html'));
+  });
+
+  syncEditToolbarButton();
+  wireChromeAriaLabels();
+}
 
 /** Lock page scroll while any modal (or the auth gate) is visible. */
 let modalScrollLockActive = false;
@@ -145,15 +353,32 @@ async function loadTripData() {
   const d = await res.json();
   APP_VERSION = d.appVersion;
   VERSIONS = d.versions;
-  DAYS_TAS1 = d.itinerary.tas1;
-  DAYS_TAS2 = d.itinerary.tas2;
-  DAYS_MELB = d.itinerary.melb;
-  STAYS = d.stays;
-  CHECKLIST = d.checklist;
-  CL_META = d.clMeta;
-  COSTS = d.costs;
-  TIPS = d.tips;
+  DAYS_CQ =
+    Array.isArray(d.itinerary && d.itinerary.chongqing)
+      ? d.itinerary.chongqing
+      : Array.isArray(d.itinerary && d.itinerary.cq)
+      ? d.itinerary.cq
+      : [];
+  DAYS_XJ =
+    Array.isArray(d.itinerary && d.itinerary.xinjiang)
+      ? d.itinerary.xinjiang
+      : Array.isArray(d.itinerary && d.itinerary.xj)
+      ? d.itinerary.xj
+      : [];
+  STAYS = d.stays || [];
+  CHECKLIST = d.checklist || [];
+  CL_META = d.clMeta || {};
+  COSTS = d.costs || [];
+  TIPS = d.tips || [];
   FLIGHTS = Array.isArray(d.flights) ? d.flights : [];
+  UI_EN = d.ui && typeof d.ui.en === 'object' ? d.ui.en : {};
+  UI_ZH = d.ui && typeof d.ui.zh === 'object' ? d.ui.zh : {};
+  TRIP_META =
+    d.tripMeta && typeof d.tripMeta === 'object'
+      ? d.tripMeta
+      : { currencySymbol: '¥', groupSize: 4, totalDays: 14, statDrivingKmApprox: '~', statBudgetApprox: '~¥' };
+  MAPS_DATA = d.mapsData && typeof d.mapsData === 'object' ? d.mapsData : {};
+  PAGE_SEED = d.pageSeed && typeof d.pageSeed === 'object' ? d.pageSeed : {};
   TRIP_COUNTDOWN_META = d.tripCountdown && typeof d.tripCountdown === 'object' ? d.tripCountdown : null;
 }
 
@@ -1034,15 +1259,16 @@ function flightCountdownBannerLine() {
   const nextAt = getNextFlightDepartureMs();
   if (nextAt != null) {
     const ms = nextAt - Date.now();
-    if (ms < 3600000) return 'Enjoy your trip!';
+    if (ms < 3600000) return APP_LANG === 'zh' ? '祝旅途愉快！' : 'Enjoy your trip!';
     if (ms < 86400000) {
       const h = Math.floor(ms / 3600000);
-      return `${h} more hour${h === 1 ? '' : 's'} until your flight`;
+      return APP_LANG === 'zh' ? `距起飞还有约 ${h} 小时` : `${h} more hour${h === 1 ? '' : 's'} until your flight`;
     }
     const d = Math.floor(ms / 86400000);
-    return `${d} more day${d === 1 ? '' : 's'} until your flight`;
+    return APP_LANG === 'zh' ? `距起飞还有 ${d} 天` : `${d} more day${d === 1 ? '' : 's'} until your flight`;
   }
-  if (isTripCalendarPast()) return 'Hope you brought the stories home. ✈️';
+  if (isTripCalendarPast())
+    return APP_LANG === 'zh' ? '把一路故事安全带回家。✈️' : 'Hope you brought the stories home. ✈️';
   return null;
 }
 
@@ -1057,7 +1283,7 @@ function renderTripCountdownBanner() {
   if (getEnrichedFlightRowsSorted().length === 0) {
     el.classList.remove('trip-countdown-banner--empty');
     el.classList.add('trip-countdown-banner--placeholder');
-    el.innerHTML = `<div class="trip-cd-bar trip-cd-bar--dotted">${flightEsc('Add your first flight above.')}</div>`;
+    el.innerHTML = `<div class="trip-cd-bar trip-cd-bar--dotted">${flightEsc(Ui('flight.addPromptFirst'))}</div>`;
     return;
   }
 
@@ -1242,7 +1468,10 @@ function renderFlights() {
   grid.classList.toggle('flight-cards-scroller--empty', rows.length === 0);
   grid.innerHTML = rows.length
     ? rows.map(flightCardHtml).join('')
-    : '<div class="flight-empty flight-empty--solo">No flights here yet. Use <strong>+ Add flight</strong> or restore data from a backup.</div>';
+    : `<div class="flight-empty flight-empty--solo">${flightEsc(
+        Ui('flight.gridEmpty') ||
+          'No flights listed yet — add flights with the button below or restore a backup.',
+      )}</div>`;
 
   setupFlightCardDots();
   renderTripCountdownBanner();
@@ -1276,7 +1505,7 @@ function initFlightBoardSectionToggle() {
     const collapsed = localStorage.getItem(FLIGHT_BOARD_COLLAPSED_KEY) === '1';
     wrap.classList.toggle('flight-board-wrap--board-faded', collapsed);
     wrap.classList.toggle('flight-board-wrap--collapsed', collapsed);
-    btn.textContent = collapsed ? 'Show' : 'Hide';
+    btn.textContent = collapsed ? Ui('flight.show') : Ui('flight.hide');
     btn.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
     if (collapsed) {
       stack.setAttribute('inert', '');
@@ -1297,7 +1526,7 @@ function initFlightBoardSectionToggle() {
 
     if (!collapsed) {
       localStorage.setItem(FLIGHT_BOARD_COLLAPSED_KEY, '1');
-      btn.textContent = 'Show';
+      btn.textContent = Ui('flight.show');
       btn.setAttribute('aria-expanded', 'false');
       if (reduceMotion) {
         applyFromStorage();
@@ -1318,7 +1547,7 @@ function initFlightBoardSectionToggle() {
       }, FLIGHT_BOARD_FADE_MS);
     } else {
       localStorage.setItem(FLIGHT_BOARD_COLLAPSED_KEY, '0');
-      btn.textContent = 'Hide';
+      btn.textContent = Ui('flight.hide');
       btn.setAttribute('aria-expanded', 'true');
       if (reduceMotion) {
         applyFromStorage();
@@ -1353,14 +1582,9 @@ function openFlightAddModal() {
   closeAllFlightModalTypeaheads();
   flightModalEditingId = null;
   const titleEl = document.getElementById('flight-modal-title');
-  if (titleEl) titleEl.textContent = 'Add flight';
-  const subEl = document.getElementById('flight-modal-sub');
-  if (subEl) {
-    subEl.textContent =
-      'Saved only on this device. Enter departure and optional arrival in your local timezone; times are stored in UTC.';
-  }
-  const submitEl = document.getElementById('flight-modal-submit');
-  if (submitEl) submitEl.textContent = 'Save flight';
+  if (titleEl) titleEl.textContent = Ui('flight.modal.titleAdd');
+  refreshFlightConnectionSelect();
+  refreshFlightModalI18n();
   const ids = [
     'flight-f-airline-code',
     'flight-f-airline-search',
@@ -1404,21 +1628,21 @@ function openFlightEditModal(id) {
   closeAllFlightModalTypeaheads();
   flightModalEditingId = id;
   const titleEl = document.getElementById('flight-modal-title');
-  if (titleEl) titleEl.textContent = 'Edit flight';
+  if (titleEl) titleEl.textContent = Ui('flight.modal.titleEdit');
+  refreshFlightConnectionSelect();
   const subEl = document.getElementById('flight-modal-sub');
-  if (subEl) {
-    subEl.textContent =
-      'Updates are saved on this device. Built-in legs still merge with the live status file when you open the app.';
+  if (subEl && subEl.hasAttribute('data-ui-edit')) {
+    subEl.textContent = Ui(subEl.getAttribute('data-ui-edit'));
   }
   const submitEl = document.getElementById('flight-modal-submit');
-  if (submitEl) submitEl.textContent = 'Save changes';
+  if (submitEl) submitEl.textContent = Ui('flight.saveChanges');
   setAirlineFieldsFromModel('flight-f-', src);
   document.getElementById('flight-f-dep-ap').value = src.depAirport || '';
   document.getElementById('flight-f-arr-ap').value = src.arrAirport || '';
   document.getElementById('flight-f-dep').value = isoToDatetimeLocal(src.departureUtc);
   document.getElementById('flight-f-arr').value = src.arrivalUtc ? isoToDatetimeLocal(src.arrivalUtc) : '';
   const conn = document.getElementById('flight-f-connection');
-  if (conn) conn.value = src.connectionKind && FLIGHT_CONNECTION_LABELS[src.connectionKind] ? src.connectionKind : 'direct';
+  if (conn) conn.value = src.connectionKind && FLIGHT_CONN_ORDER.includes(src.connectionKind) ? src.connectionKind : 'direct';
   setAirlineFieldsFromModel('flight-f-conn-', {
     airlineCode: src.connAirlineCode,
     flightDigits: src.connFlightDigits,
@@ -1440,9 +1664,9 @@ function closeFlightAddModal() {
   closeAllFlightModalTypeaheads();
   document.getElementById('flightAddModal')?.classList.remove('open');
   const titleEl = document.getElementById('flight-modal-title');
-  if (titleEl) titleEl.textContent = 'Add flight';
+  if (titleEl) titleEl.textContent = Ui('flight.modal.titleAdd');
   const submitEl = document.getElementById('flight-modal-submit');
-  if (submitEl) submitEl.textContent = 'Save flight';
+  if (submitEl) submitEl.textContent = Ui('flight.save');
 }
 
 function submitFlightAdd() {
@@ -1450,7 +1674,11 @@ function submitFlightAdd() {
   const arrAp = document.getElementById('flight-f-arr-ap').value.trim().toUpperCase();
   const dep = document.getElementById('flight-f-dep').value;
   if (depAp.length < 3 || arrAp.length < 3 || !dep) {
-    showAlert('Enter both airport codes (3 letters) and a departure date & time. Use the suggestions list or type a valid IATA code.', 'Flight');
+    showAlert(
+      Ui('flight.err.depAp') ||
+        'Enter both airport codes (3 letters) and a departure date & time. Use the suggestions list or type a valid IATA code.',
+      Ui('flight.modal.titleAdd') || 'Flight',
+    );
     return;
   }
   const mainCode = readAirlineCode('flight-f-');
@@ -1576,11 +1804,32 @@ function saveHistory(h) {
 // ═══════════════════════════════════════
 let clSort = 'urgency';
 
-const CL_SORT_MODES = ['urgency', 'category', 'date', 'status'];
+function localizePlannerCategory(cat) {
+  if (APP_LANG !== 'zh') return cat;
+  const map = {
+    Flights: '航班',
+    Accommodation: '住宿',
+    'Car Rental': '租车',
+    'Ground transport': '包车 / 地面交通',
+    'Ferries & Transfers': '渡轮 / 接驳',
+    Activities: '体验活动',
+    Insurance: '旅行保险',
+    Essentials: '必备事项',
+    Planner: '规划',
+    Other: '其他',
+  };
+  return map[cat] || cat;
+}
+
+const CL_SORT_MODES = ['urgency', 'category', 'city', 'status'];
 
 function loadClSortPreference() {
   try {
-    const s = localStorage.getItem(CL_SORT_KEY);
+    let s = localStorage.getItem(CL_SORT_KEY);
+    if (s === 'date') {
+      s = 'city';
+      localStorage.setItem(CL_SORT_KEY, 'city');
+    }
     if (s && CL_SORT_MODES.includes(s)) clSort = s;
   } catch (_) { /* ignore */ }
 }
@@ -1598,52 +1847,114 @@ function setClSort(s) {
   renderChecklist();
 }
 
+function checklistItemWord(n) {
+  if (APP_LANG === 'zh') return n + ' 条';
+  return n + ' item' + (n !== 1 ? 's' : '');
+}
+
 function getChecklistGroups() {
   if (!CHECKLIST || !Array.isArray(CHECKLIST)) return [];
-  const metaFor = id => (CL_META && CL_META[id]) || { cat: 'Other', catIcon: '📌', catColor: '#86868b', tripDate: 0 };
+  const metaFor = id => ({
+    cat: 'Other',
+    catIcon: '📌',
+    catColor: '#86868b',
+    tripCity: 'pre',
+    ...(CL_META && CL_META[id] ? CL_META[id] : {}),
+  });
   const state = loadChecklistState();
-  const allItems = CHECKLIST.flatMap(g => g.items.map(it => ({
-    ...it, ...metaFor(it.id),
-    urgencyId: g.id, urgencyLabel: g.label, urgencyColor: g.color, urgencySub: g.sub
-  })));
+  const allItems = CHECKLIST.flatMap(g =>
+    g.items.map(it => ({
+      ...it,
+      ...metaFor(it.id),
+      urgencyId: g.id,
+      urgencyLabel: g.label,
+      urgencyColor: g.color,
+      urgencySub: g.sub,
+    })),
+  );
 
   if (clSort === 'urgency') {
     return CHECKLIST.map(g => ({
-      id: g.id, label: g.label, sub: g.sub, color: g.color,
-      items: g.items.map(it => ({ ...it, ...metaFor(it.id) }))
+      id: g.id,
+      label: Tx(g.label),
+      sub: Tx(g.sub),
+      color: g.color,
+      items: g.items.map(it => ({ ...it, ...metaFor(it.id) })),
     }));
   }
   if (clSort === 'category') {
-    const catOrder = ['Flights', 'Accommodation', 'Car Rental', 'Ferries & Transfers', 'Activities', 'Insurance', 'Essentials'];
-    const cats = [...new Set(allItems.map(it => it.cat))].sort((a, b) =>
-      (catOrder.indexOf(a) < 0 ? 99 : catOrder.indexOf(a)) - (catOrder.indexOf(b) < 0 ? 99 : catOrder.indexOf(b)));
+    const catOrder = [
+      'Flights',
+      'Accommodation',
+      'Car Rental',
+      'Ground transport',
+      'Ferries & Transfers',
+      'Activities',
+      'Insurance',
+      'Essentials',
+    ];
+    const cats = [...new Set(allItems.map(it => it.cat))].sort(
+      (a, b) =>
+        (catOrder.indexOf(a) < 0 ? 99 : catOrder.indexOf(a)) -
+        (catOrder.indexOf(b) < 0 ? 99 : catOrder.indexOf(b)),
+    );
     return cats.map(cat => {
       const items = allItems.filter(it => it.cat === cat);
       const m = items[0];
       return {
         id: 'cat-' + cat.replace(/\s+/g, '-'),
-        label: m.catIcon + ' ' + cat,
-        sub: items.length + ' item' + (items.length !== 1 ? 's' : ''),
+        label: `${m.catIcon} ${escapeHtml(localizePlannerCategory(cat))}`,
+        sub: checklistItemWord(items.length),
         color: m.catColor,
-        items
+        items,
       };
     });
   }
-  if (clSort === 'date') {
-    const dates = [...new Set(allItems.map(it => it.tripDate))].sort((a, b) => a - b);
-    return dates.map(d => {
-      const items = allItems.filter(it => it.tripDate === d);
-      const label = d === 0 ? '📋 Pre-Trip (book now)' : '📅 Dec ' + d;
-      const color = d === 0 ? '#636366' : d <= 9 ? '#ff3b30' : d <= 13 ? '#ff9500' : d <= 17 ? '#34c759' : '#0071e3';
-      return { id: 'date-' + d, label, sub: items.length + ' item' + (items.length !== 1 ? 's' : ''), color, items };
+  if (clSort === 'city') {
+    const cityOrder = { pre: 0, cq: 1, xj: 2 };
+    const cities = [...new Set(allItems.map(it => metaFor(it.id).tripCity || 'pre'))].sort(
+      (a, b) => (cityOrder[a] ?? 9) - (cityOrder[b] ?? 9),
+    );
+    return cities.map(city => {
+      const items = allItems.filter(it => (metaFor(it.id).tripCity || 'pre') === city);
+      const label =
+        city === 'pre' ? Ui('checklist.city.pre') : city === 'cq' ? Ui('checklist.city.cq') : Ui('checklist.city.xj');
+      const palette = city === 'pre' ? '#636366' : city === 'cq' ? '#0071e3' : '#ff9500';
+      return {
+        id: `city-${city}`,
+        label,
+        sub: checklistItemWord(items.length),
+        color: palette,
+        items,
+      };
     });
   }
   if (clSort === 'status') {
     const todo = allItems.filter(it => !state[it.id]);
     const done = allItems.filter(it => state[it.id]);
     return [
-      todo.length ? { id: 'todo', label: '⏳ Still to Book', sub: todo.length + ' item' + (todo.length !== 1 ? 's' : '') + ' remaining', color: '#ff9500', items: todo } : null,
-      done.length ? { id: 'done', label: '✅ Booked', sub: done.length + ' item' + (done.length !== 1 ? 's' : '') + ' complete', color: '#34c759', items: done } : null,
+      todo.length
+        ? {
+            id: 'todo',
+            label: Ui('checklist.status.todo'),
+            sub:
+              Ui('checklist.status.todoSub') ||
+              checklistItemWord(todo.length),
+            color: '#ff9500',
+            items: todo,
+          }
+        : null,
+      done.length
+        ? {
+            id: 'done',
+            label: Ui('checklist.status.done'),
+            sub:
+              Ui('checklist.status.doneSub') ||
+              checklistItemWord(done.length),
+            color: '#34c759',
+            items: done,
+          }
+        : null,
     ].filter(Boolean);
   }
   return [];
@@ -1652,74 +1963,156 @@ function getChecklistGroups() {
 // ═══════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════
+function daySeqLabel(num) {
+  const n = parseInt(String(num), 10);
+  if (!Number.isFinite(n)) return '';
+  return APP_LANG === 'zh' ? `第 ${n} 天` : `Day ${n}`;
+}
+
 function renderDays(days, containerId) {
   const container = document.getElementById(containerId);
-  container.innerHTML = days.map(d => `
+  if (!container) return;
+  container.innerHTML = days
+    .map(d => {
+      const tlHtml = d.timeline
+        ? `<div class="day-timeline-wrap"><div class="day-timeline">${d.timeline
+            .map(t => {
+              const time = escapeHtml(Tx(t.time));
+              const lab = escapeHtml(Tx(t.label));
+              const ic = t.icon != null ? escapeHtml(String(t.icon)) : '';
+              return `<div class="tl-stop"><div class="tl-stop-time">${time}</div><div class="tl-stop-dot"></div><div class="tl-stop-icon">${ic}</div><div class="tl-stop-label">${lab}</div></div>`;
+            })
+            .join('')}</div></div>`
+        : '';
+      const acts = (d.activities || [])
+        .map((a, i) => {
+          const costHtml = a.cost
+            ? `<div class="act-cost" data-key="${d.id}-act${i}-cost" data-label="Day ${d.num} activity ${
+                i + 1
+              } cost">💰 ${escapeHtml(Tx(a.cost))}</div>`
+            : '';
+          return `<li class="act-item">
+          <div class="act-icon">${escapeHtml(String(a.icon || ''))}</div>
+          <div>
+            <div class="act-name" data-key="${d.id}-act${i}-name" data-label="Day ${d.num} activity ${
+              i + 1
+            } name">${escapeHtml(Tx(a.name))}</div>
+            <div class="act-desc" data-key="${d.id}-act${i}-desc" data-label="Day ${d.num} activity ${
+              i + 1
+            } description">${escapeHtml(Tx(a.desc))}</div>
+            ${costHtml}
+          </div>
+        </li>`;
+        })
+        .join('');
+      const desc = escapeHtml(Tx(d.desc));
+      const title = escapeHtml(Tx(d.title));
+      const meta = escapeHtml(Tx(d.meta));
+      return `
     <div class="day-card" id="card-${d.id}" data-card-id="${d.id}">
       <button class="del-btn" onclick="deleteCard('card-${d.id}')">×</button>
       <div class="day-header" onclick="toggleDay('card-${d.id}')">
-        <div class="day-num"><span class="day-weekday">${d.day}</span><span class="day-date">${d.date}</span><span class="day-sequence">Day ${parseInt(d.num, 10)}</span></div>
+        <div class="day-num"><span class="day-weekday">${escapeHtml(Tx(d.day))}</span><span class="day-date">${escapeHtml(
+          Tx(d.date),
+        )}</span><span class="day-sequence">${escapeHtml(daySeqLabel(d.num))}</span></div>
         <div class="day-info">
           <div>
-            <div class="day-title-text" data-key="${d.id}-title" data-label="Day ${d.num} title">${d.title}</div>
-            <div class="day-meta"><span data-key="${d.id}-meta" data-label="Day ${d.num} route/distance">${d.meta}</span></div>
+            <div class="day-title-text" data-key="${d.id}-title" data-label="Day ${d.num} title">${title}</div>
+            <div class="day-meta"><span data-key="${d.id}-meta" data-label="Day ${d.num} route/distance">${meta}</span></div>
           </div>
           <div class="day-toggle">⌄</div>
         </div>
       </div>
       <div class="day-content">
-        <img class="day-img" src="${d.img}" alt="${d.imgAlt}" onerror="this.style.display='none'">
-        ${d.timeline ? `<div class="day-timeline-wrap"><div class="day-timeline">${d.timeline.map(t=>`<div class="tl-stop"><div class="tl-stop-time">${t.time}</div><div class="tl-stop-dot"></div><div class="tl-stop-icon">${t.icon}</div><div class="tl-stop-label">${t.label}</div></div>`).join('')}</div></div>` : ''}
-        <p style="font-size:14px;line-height:1.75;color:var(--text-sec);letter-spacing:0.01em;margin-top:14px" data-key="${d.id}-desc" data-label="Day ${d.num} description">${d.desc}</p>
+        <img class="day-img" src="${escapeHtml(d.img)}" alt="${escapeHtml(Tx(d.imgAlt))}" onerror="this.style.display='none'">
+        ${tlHtml}
+        <p style="font-size:14px;line-height:1.75;color:var(--text-sec);letter-spacing:0.01em;margin-top:14px" data-key="${
+          d.id
+        }-desc" data-label="Day ${d.num} description">${desc}</p>
         <ul class="act-list">
-          ${d.activities.map((a,i) => `
-          <li class="act-item">
-            <div class="act-icon">${a.icon}</div>
-            <div>
-              <div class="act-name" data-key="${d.id}-act${i}-name" data-label="Day ${d.num} activity ${i+1} name">${a.name}</div>
-              <div class="act-desc" data-key="${d.id}-act${i}-desc" data-label="Day ${d.num} activity ${i+1} description">${a.desc}</div>
-              ${a.cost ? `<div class="act-cost" data-key="${d.id}-act${i}-cost" data-label="Day ${d.num} activity ${i+1} cost">💰 ${a.cost}</div>` : ''}
-            </div>
-          </li>`).join('')}
+          ${acts}
         </ul>
       </div>
-    </div>`).join('');
+    </div>`;
+    })
+    .join('');
 }
 
 function renderStays() {
-  document.getElementById('stay-list').innerHTML = STAYS.map(s => `
+  const sy = TRIP_META.currencySymbol || '¥';
+  document.getElementById('stay-list').innerHTML = STAYS.map(
+    s => `
     <div class="stay-card" id="card-stay-${s.id}" data-card-id="stay-${s.id}">
       <button class="del-btn" onclick="deleteCard('card-stay-${s.id}')">×</button>
-      <img class="stay-img" src="${s.img}" alt="${s.name}" onerror="this.style.display='none'">
+      <img class="stay-img" src="${s.img}" alt="${escapeHtml(Tx(s.name))}" onerror="this.style.display='none'">
       <div class="stay-body">
-        <div class="stay-name" data-key="stay-${s.id}-name" data-label="${s.name} stay name">${s.name}</div>
-        <div class="stay-loc">📍 <span data-key="stay-${s.id}-loc" data-label="${s.name} location">${s.loc}</span></div>
-        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-sec);margin-bottom:8px">${s.nights}</div>
+        <div class="stay-name" data-key="stay-${s.id}-name" data-label="${escapeHtml(Tx(s.name))} stay name">${escapeHtml(
+          Tx(s.name),
+        )}</div>
+        <div class="stay-loc">📍 <span data-key="stay-${s.id}-loc" data-label="${escapeHtml(Tx(s.name))} location">${escapeHtml(
+          Tx(s.loc),
+        )}</span></div>
+        <div style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-sec);margin-bottom:8px">${escapeHtml(
+          Tx(s.nights),
+        )}</div>
         <div style="font-size:13px;color:var(--text-sec);margin-bottom:12px">
-          <strong>Best Airbnb areas:</strong> <span data-key="stay-${s.id}-areas" data-label="${s.name} recommended areas">${s.areas.join(' · ')}</span>
+          <strong>${escapeHtml(
+            Ui('stay.bestAreas'),
+          )}:</strong> <span data-key="stay-${s.id}-areas" data-label="${escapeHtml(Tx(s.name))} recommended areas">${(
+      s.areas || []
+    )
+      .map(x => escapeHtml(Tx(x)))
+      .join(' · ')}</span>
         </div>
-        <div class="stay-pills">${s.pills.map(p=>`<div class="stay-pill">${p}</div>`).join('')}</div>
+        <div class="stay-pills">${(s.pills || []).map(p => `<div class="stay-pill">${escapeHtml(Tx(p))}</div>`).join('')}</div>
         <div class="stay-price-row">
-          <div class="stay-price">$<span data-key="stay-${s.id}-min" data-label="${s.name} min nightly price" data-cost-id="stay-${s.id}-min">${s.minPrice}</span>–<span data-key="stay-${s.id}-max" data-label="${s.name} max nightly price" data-cost-id="stay-${s.id}-max">${s.maxPrice}</span></div>
-          <div class="stay-price-note">/night (whole house)</div>
+          <div class="stay-price">${sy}<span data-key="stay-${s.id}-min" data-label="${
+          s.id
+        } min nightly price" data-cost-id="stay-${s.id}-min">${s.minPrice}</span>–<span data-key="stay-${
+          s.id
+        }-max" data-label="${s.id} max nightly price" data-cost-id="stay-${s.id}-max">${s.maxPrice}</span></div>
+          <div class="stay-price-note" data-ui="stay.perNightWhole">${escapeHtml(
+            Ui('stay.perNightWhole'),
+          )}</div>
         </div>
-        <p class="stay-tip" data-key="stay-${s.id}-tip" data-label="${s.name} tip">💡 ${s.tip}</p>
+        <p class="stay-tip" data-key="stay-${s.id}-tip" data-label="${escapeHtml(Tx(s.name))} tip">💡 ${escapeHtml(
+          Tx(s.tip),
+        )}</p>
       </div>
-    </div>`).join('');
+    </div>`,
+  ).join('');
+}
+
+function costRowSlug(c, idx) {
+  return c.catSlug != null ? String(c.catSlug) : `fallback-${idx}`;
+}
+
+function slugToCostCategoryLabel(slug) {
+  const row = COSTS.find((c, i) => costRowSlug(c, i) === slug);
+  return row ? Tx(row.cat) : slug;
 }
 
 function renderCostTable() {
   const tbody = document.getElementById('cost-table-body');
-  let lastCat = '';
-  tbody.innerHTML = COSTS.map((c,i) => {
-    const catCell = c.cat !== lastCat ? `<td class="cost-cat" rowspan="${COSTS.filter(x=>x.cat===c.cat).length}">${c.cat}</td>` : '';
-    if(c.cat !== lastCat) lastCat = c.cat;
+  const sym = TRIP_META.currencySymbol || '¥';
+  let lastSlug = '';
+  tbody.innerHTML = COSTS.map((c, i) => {
+    const slug = costRowSlug(c, i);
+    const span = COSTS.filter((x, j) => costRowSlug(x, j) === slug).length;
+    const catCell = slug !== lastSlug ? `<td class="cost-cat" rowspan="${span}">${escapeHtml(Tx(c.cat))}</td>` : '';
+    if (slug !== lastSlug) lastSlug = slug;
     return `<tr>
       ${catCell}
-      <td data-key="cost-${i}-item" data-label="${c.item} cost item">${c.item}</td>
-      <td class="cost-amt">$<span data-key="cost-${i}-total" data-label="${c.item} total cost" data-chart-update="1">${c.total.toLocaleString()}</span></td>
-      <td class="cost-amt" style="color:var(--blue)">$<span data-key="cost-${i}-pp" data-label="${c.item} per person" data-chart-update="1">${c.pp}</span></td>
-      <td style="font-size:12px;color:var(--text-sec)" data-key="cost-${i}-note" data-label="${c.item} notes">${c.note}</td>
+      <td data-key="cost-${i}-item" data-label="${escapeHtml(Tx(c.item))} cost item">${escapeHtml(Tx(c.item))}</td>
+      <td class="cost-amt">${sym}<span data-key="cost-${i}-total" data-label="${escapeHtml(
+        Tx(c.item),
+      )} total cost" data-chart-update="1">${c.total.toLocaleString()}</span></td>
+      <td class="cost-amt" style="color:var(--blue)">${sym}<span data-key="cost-${i}-pp" data-label="${escapeHtml(
+        Tx(c.item),
+      )} per person" data-chart-update="1">${c.pp}</span></td>
+      <td style="font-size:12px;color:var(--text-sec)" data-key="cost-${i}-note" data-label="${escapeHtml(
+        Tx(c.item),
+      )} notes">${escapeHtml(Tx(c.note))}</td>
     </tr>`;
   }).join('');
 }
@@ -1738,7 +2131,7 @@ function renderChecklist() {
           <div class="cl-group-title">${g.label}</div>
           <div class="cl-group-sub">${g.sub}</div>
         </div>
-        <div class="cl-group-badge">${done}/${total}</div>
+        <div class="cl-group-badge">${done}/${total} ${Ui('checklist.slotBookedSuffix')}</div>
       </div>
       <div class="cl-items">
         ${g.items.map(it => {
@@ -1748,12 +2141,12 @@ function renderChecklist() {
               <div class="cl-checkbox-wrap"><input type="checkbox" class="cl-check" data-id="${it.id}" onchange="toggleChecklistItem(this)" ${checked?'checked':''}></div>
               <div class="cl-icon">${it.icon}</div>
               <div class="cl-content">
-                <div class="cl-title">${it.title}</div>
-                <div class="cl-dates">${it.dates}</div>
-                <div class="cl-detail">${it.detail}</div>
+                <div class="cl-title">${escapeHtml(Tx(it.title))}</div>
+                <div class="cl-dates">${escapeHtml(Tx(it.dates))}</div>
+                <div class="cl-detail">${escapeHtml(Tx(it.detail))}</div>
                 <div class="cl-meta">
-                  <span class="cl-est">💰 ${it.est}</span>
-                  <span class="cl-where">🔗 ${it.where}</span>
+                  <span class="cl-est">💰 ${escapeHtml(Tx(it.est))}</span>
+                  <span class="cl-where">🔗 ${escapeHtml(Tx(it.where))}</span>
                 </div>
               </div>
             </label>
@@ -1785,7 +2178,11 @@ function updateChecklistProgress() {
   const fill  = document.getElementById('cl-progress-fill');
   const label = document.getElementById('cl-progress-label');
   if (fill)  fill.style.width = pct + '%';
-  if (label) label.textContent = done + ' of ' + total + ' items booked (' + pct + '%)';
+  if (label)
+    label.textContent =
+      APP_LANG === 'zh'
+        ? `已勾选 ${done} / ${total}（${pct}%）`
+        : `${done} of ${total} items booked (${pct}%)`;
 }
 
 function loadChecklistState() {
@@ -1807,13 +2204,23 @@ function showAlert(msg, title) {
 }
 
 function renderTips() {
-  document.getElementById('tips-grid').innerHTML = TIPS.map((t,ti) => `
+  document.getElementById('tips-grid').innerHTML = TIPS.map((t, ti) => {
+    const title = Tx(t.title);
+    return `
     <div class="tip-card" id="card-tip-${ti}" data-card-id="tip-${ti}">
       <button class="del-btn" onclick="deleteCard('card-tip-${ti}')">×</button>
-      <div class="tip-icon">${t.icon}</div>
-      <div class="tip-title" data-key="tip-${ti}-title" data-label="${t.title} tip card title">${t.title}</div>
-      <ul class="tip-list">${t.items.map((item,ii)=>`<li data-key="tip-${ti}-item${ii}" data-label="${t.title} tip ${ii+1}">${item}</li>`).join('')}</ul>
-    </div>`).join('');
+      <div class="tip-icon">${escapeHtml(String(t.icon || ''))}</div>
+      <div class="tip-title" data-key="tip-${ti}-title" data-label="${escapeHtml(title)} tip card title">${escapeHtml(title)}</div>
+      <ul class="tip-list">${t.items
+        .map(
+          (item, ii) =>
+            `<li data-key="tip-${ti}-item${ii}" data-label="${escapeHtml(title)} tip ${ii + 1}">${escapeHtml(
+              Tx(item),
+            )}</li>`,
+        )
+        .join('')}</ul>
+    </div>`;
+  }).join('');
 }
 
 // ═══════════════════════════════════════
@@ -1821,10 +2228,11 @@ function renderTips() {
 // ═══════════════════════════════════════
 function getCostsByCategory() {
   const cats = {};
-  COSTS.forEach((c,i) => {
+  COSTS.forEach((c, i) => {
+    const slug = costRowSlug(c, i);
     const el = document.querySelector(`[data-key="cost-${i}-pp"]`);
-    const val = el ? parseFloat(el.textContent.replace(/[^0-9.]/g,'')) || 0 : c.pp;
-    cats[c.cat] = (cats[c.cat] || 0) + val;
+    const val = el ? parseFloat(el.textContent.replace(/[^0-9.]/g, '')) || 0 : Number(c.pp) || 0;
+    cats[slug] = (cats[slug] || 0) + val;
   });
   return cats;
 }
@@ -1836,41 +2244,92 @@ function getTotalPP() {
 
 function initCharts() {
   const cats = getCostsByCategory();
-  const labels = Object.keys(cats);
+  const sym = TRIP_META.currencySymbol || '¥';
+  const labels = Object.keys(cats).map(slugToCostCategoryLabel);
   const values = Object.values(cats);
-  const colors = ['#0071e3','#34c759','#ff9500','#ff3b30','#bf5af2','#30d158','#ffd60a'];
+  const ppLbl = Ui('budget.chart.pp') || 'Per person';
+  const colors = ['#0071e3', '#34c759', '#ff9500', '#ff3b30', '#bf5af2', '#30d158', '#ffd60a'];
 
-  if(pieChart) pieChart.destroy();
-  if(barChart) barChart.destroy();
+  if (pieChart) pieChart.destroy();
+  if (barChart) barChart.destroy();
 
   const pie = document.getElementById('pieChart');
   const bar = document.getElementById('barChart');
-  if(!pie || !bar) return;
+  if (!pie || !bar) return;
 
   pieChart = new Chart(pie, {
-    type:'doughnut',
-    data:{labels,datasets:[{data:values,backgroundColor:colors,borderWidth:0,hoverOffset:8}]},
-    options:{responsive:true,cutout:'60%',plugins:{legend:{position:'right',labels:{font:{family:'-apple-system,BlinkMacSystemFont,sans-serif',size:12},padding:16}},tooltip:{callbacks:{label:ctx=>`${ctx.label}: $${ctx.parsed.toFixed(0)} pp`}}}}
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 0, hoverOffset: 8 }] },
+    options: {
+      responsive: true,
+      cutout: '60%',
+      plugins: {
+        legend: {
+          position: 'right',
+          labels: {
+            font: { family: '-apple-system,BlinkMacSystemFont,sans-serif', size: 12 },
+            padding: 16,
+          },
+        },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${ctx.label}: ${sym}${Number(ctx.parsed).toLocaleString(undefined, {
+              maximumFractionDigits: 0,
+            })} ${ppLbl}`,
+          },
+        },
+      },
+    },
   });
 
   barChart = new Chart(bar, {
-    type:'bar',
-    data:{labels,datasets:[{label:'Per person (AUD)',data:values,backgroundColor:colors,borderRadius:6,borderSkipped:false}]},
-    options:{responsive:true,plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`$${ctx.parsed.y.toFixed(0)} pp`}}},scales:{y:{beginAtZero:true,grid:{color:'rgba(0,0,0,0.05)'},ticks:{callback:v=>'$'+v}},x:{grid:{display:false}}}}
+    type: 'bar',
+    data: { labels, datasets: [{ label: ppLbl, data: values, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: ctx => `${sym}${Number(ctx.parsed.y).toLocaleString(undefined, { maximumFractionDigits: 0 })} · ${ppLbl}`,
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(0,0,0,0.05)' },
+          ticks: { callback: v => sym + v },
+        },
+        x: { grid: { display: false } },
+      },
+    },
   });
 }
 
 function updateCharts() {
   const cats = getCostsByCategory();
-  const labels = Object.keys(cats);
+  const sym = TRIP_META.currencySymbol || '¥';
+  const labels = Object.keys(cats).map(slugToCostCategoryLabel);
   const values = Object.values(cats);
-  if(pieChart){pieChart.data.labels=labels;pieChart.data.datasets[0].data=values;pieChart.update();}
-  if(barChart){barChart.data.labels=labels;barChart.data.datasets[0].data=values;barChart.update();}
+  if (pieChart) {
+    pieChart.data.labels = labels;
+    pieChart.data.datasets[0].data = values;
+    pieChart.update();
+  }
+  if (barChart) {
+    barChart.data.labels = labels;
+    barChart.data.datasets[0].data = values;
+    barChart.data.datasets[0].label = Ui('budget.chart.pp') || 'Per person';
+    barChart.options.scales.y.ticks.callback = v => sym + v;
+    barChart.update();
+  }
   const total = getTotalPP();
+  const gs = Number(TRIP_META.groupSize) > 0 ? Number(TRIP_META.groupSize) : 4;
   const totalEl = document.getElementById('total-pp');
   const groupEl = document.getElementById('total-group');
-  if(totalEl) totalEl.textContent = '~$' + Math.round(total).toLocaleString();
-  if(groupEl) groupEl.textContent = '~$' + Math.round(total*4).toLocaleString();
+  if (totalEl) totalEl.textContent = '~' + sym + Math.round(total).toLocaleString();
+  if (groupEl) groupEl.textContent = '~' + sym + Math.round(total * gs).toLocaleString();
 }
 
 // ═══════════════════════════════════════
@@ -1891,8 +2350,10 @@ function showPage(id, btn) {
   else window.scrollTo(0, 0);
   closeMobileMenu();
   if(id === 'budget') setTimeout(initCharts, 100);
-  if(id === 'overview' && window._mapTas) setTimeout(() => window._mapTas.invalidateSize(), 50);
-  if(id === 'melb' && window._mapMelb) setTimeout(() => window._mapMelb.invalidateSize(), 50);
+  if ((id === 'overview' || id === 'cq') && window._mapCQ)
+    setTimeout(() => window._mapCQ.invalidateSize(), 50);
+  if ((id === 'overview' || id === 'xj') && window._mapXJ)
+    setTimeout(() => window._mapXJ.invalidateSize(), 50);
   normalizeBodyScroll();
 }
 
@@ -1958,12 +2419,12 @@ function syncEditToolbarButton() {
   if (!b) return;
   if (isEditing) {
     b.textContent = '✓';
-    b.setAttribute('aria-label', 'Finish editing');
-    b.title = 'Done';
+    b.setAttribute('aria-label', Ui('tools.editDoneAria'));
+    b.title = Ui('tools.editDoneTip');
   } else {
-    b.textContent = '✏️';
-    b.setAttribute('aria-label', 'Edit page content');
-    b.title = 'Edit';
+    b.textContent = Ui('tools.edit');
+    b.setAttribute('aria-label', Ui('tools.editAria'));
+    b.title = Ui('tools.editTip');
   }
 }
 
@@ -1978,7 +2439,7 @@ function toggleEdit() {
     document.getElementById('editBtn').classList.remove('tb-primary');
     document.getElementById('editBtn').classList.add('tb-export');
     syncEditToolbarButton();
-    showToast('✏️ Edit mode enabled — changes are saved locally for you only.');
+    showToast(Ui('toast.editOn'));
   } else {
     isEditing = false;
     document.body.classList.remove('editing');
@@ -2102,28 +2563,18 @@ function confirmRevert() {
 }
 
 function doRevertAll() {
-  // Re-render everything from original data
-  renderDays(DAYS_TAS1, 'days-tas1');
-  renderDays(DAYS_TAS2, 'days-tas2');
-  renderDays(DAYS_MELB, 'days-melb');
+  renderDays(DAYS_CQ, 'days-cq');
+  renderDays(DAYS_XJ, 'days-xj');
   renderStays();
   renderCostTable();
   renderTips();
   renderChecklist();
-  // reset inline editable keys from original data (hero, etc.)
-  const originals = {
-    'hero-title':'Tasmania &amp;<br>Melbourne',
-    'hero-sub':'15 days exploring the wild south — fly from Singapore into Hobart, loop the island\'s ancient rainforests, granite beaches and rugged highlands, then fly to Melbourne for the world\'s greatest coastal drive.',
-    'stat-days':'15','stat-budget':'~$4,200',
-    'overview-desc':'Fly from Singapore into Hobart and loop Tasmania clockwise — convict history, pristine rainforest, glowing granite beaches, and alpine wilderness — then fly to Melbourne for the city\'s legendary laneways and coffee, before tackling the breathtaking Great Ocean Road.',
-    'flight-hobartleg':'~$400–700','flight-melbleg':'~$120–250',
-    'car-cost':'Est. $110–150/day → ~$1,500–2,000 total',
-    'stays-desc':'All prices are estimates for a whole-home Airbnb for 4 guests in December 2026 peak season. Book as early as possible — especially Coles Bay (Freycinet) and Cradle Mountain, which have very limited supply.',
-  };
-  Object.entries(originals).forEach(([key,val]) => {
+  Object.entries(DOM_DEFAULT_HTML).forEach(([key, html]) => {
     const el = document.querySelector(`[data-key="${key}"]`);
-    if(el) el.innerHTML = val;
+    if (el) el.innerHTML = html;
   });
+  seedOverviewFromPageSeed();
+  refreshLangClasses();
   saveHistory([]);
   flightUserExtras = [];
   flightHiddenIds = new Set();
@@ -2273,19 +2724,19 @@ async function doExportPDF(isLandscape) {
   }
 
   const toast = document.createElement('div');
-  toast.textContent = 'Capturing maps…';
+  toast.textContent = Ui('flight.captureMaps');
   Object.assign(toast.style, { position:'fixed', bottom:'24px', left:'50%', transform:'translateX(-50%)',
     background:'#1d1d1f', color:'#fff', padding:'10px 22px', borderRadius:'20px',
     fontSize:'14px', fontFamily:'var(--font)', zIndex:9999, boxShadow:'0 4px 20px rgba(0,0,0,0.3)' });
   document.body.appendChild(toast);
 
   try {
-  const [mapTasUrl, mapMelbUrl] = await Promise.all([
-    captureMap('map-tas',  'page-overview', window._mapTas),
-    captureMap('map-melb', 'page-melb',     window._mapMelb),
+  const [mapCqUrl, mapXjUrl] = await Promise.all([
+    captureMap('map-cq', 'page-overview', window._mapCQ),
+    captureMap('map-xj', 'page-xj', window._mapXJ),
   ]);
 
-  toast.textContent = 'Building PDF…';
+  toast.textContent = Ui('flight.buildPdf');
   await new Promise(r => setTimeout(r, 50));
 
   function txt(key) {
@@ -2293,25 +2744,35 @@ async function doExportPDF(isLandscape) {
     return el ? el.innerText.trim() : '';
   }
 
-  const allDays = [...DAYS_TAS1, ...DAYS_TAS2, ...DAYS_MELB];
+  const allDays = [...DAYS_CQ, ...DAYS_XJ];
+  const cqCount = DAYS_CQ.length;
+  const tmPdf = TRIP_META || {};
+  const daysPdfStr = String(tmPdf.totalDays != null ? tmPdf.totalDays : allDays.length);
+  const gsPdfStr = String(tmPdf.groupSize != null ? tmPdf.groupSize : 4);
+  const drivePdfStr = escapeHtml(Tx(tmPdf.statDrivingKmApprox || ''));
+  const budgetPdfStr = escapeHtml(Tx(tmPdf.statBudgetApprox || ''));
+  const OvPdf = PAGE_SEED && PAGE_SEED.overview ? PAGE_SEED.overview : {};
+  const heroSubPdfRaw = OvPdf.heroSub ? Tx(OvPdf.heroSub) : txt('hero-sub');
 
   function buildDayHtml(d) {
     const card = document.getElementById('card-' + d.id);
     if (card && card.classList.contains('card-hidden')) return '';
-    const title = txt(`${d.id}-title`) || d.title;
-    const meta  = txt(`${d.id}-meta`)  || d.meta;
-    const desc  = txt(`${d.id}-desc`)  || d.desc;
+    const title = escapeHtml(txt(`${d.id}-title`) || Tx(d.title));
+    const meta = escapeHtml(txt(`${d.id}-meta`) || Tx(d.meta));
+    const desc = escapeHtml(txt(`${d.id}-desc`) || Tx(d.desc));
 
-    const tlHtml = d.timeline ? `<div class="tl">${d.timeline.map(t =>
-      `<div class="tl-item"><div class="tl-time">${t.time}</div><div class="tl-icon">${t.icon}</div><div class="tl-lbl">${t.label}</div></div>`
+    const tlHtml = d.timeline
+      ? `<div class="tl">${d.timeline.map(t =>
+      `<div class="tl-item"><div class="tl-time">${escapeHtml(Tx(t.time))}</div><div class="tl-icon">${escapeHtml(String(t.icon || ''))}</div><div class="tl-lbl">${escapeHtml(Tx(t.label))}</div></div>`
     ).join('')}</div>` : '';
 
-    const actsHtml = d.activities.map((a, i) => {
-      const name  = txt(`${d.id}-act${i}-name`) || a.name;
-      const adesc = txt(`${d.id}-act${i}-desc`) || a.desc;
-      const cost  = (txt(`${d.id}-act${i}-cost`) || a.cost || '').replace('💰 ', '');
+    const actsHtml = (d.activities || []).map((a, i) => {
+      const name  = escapeHtml(txt(`${d.id}-act${i}-name`) || Tx(a.name));
+      const adesc = escapeHtml(txt(`${d.id}-act${i}-desc`) || Tx(a.desc));
+      const costRaw = txt(`${d.id}-act${i}-cost`) || (a.cost != null ? Tx(a.cost) : '');
+      const cost  = escapeHtml(costRaw.replace(/^💰\s*/, ''));
       return `<div class="act">
-        <span class="act-ico">${a.icon}</span>
+        <span class="act-ico">${escapeHtml(String(a.icon || ''))}</span>
         <div>
           <div class="act-name">${name}</div>
           <div class="act-desc">${adesc}</div>
@@ -2322,7 +2783,7 @@ async function doExportPDF(isLandscape) {
 
     return `<div class="day">
       <div class="day-hdr">
-        <div class="day-num"><span>${d.day}</span><strong>${d.date}</strong><span>Day ${parseInt(d.num, 10)}</span></div>
+        <div class="day-num"><span>${escapeHtml(Tx(d.day))}</span><strong>${escapeHtml(Tx(d.date))}</strong><span>${escapeHtml(daySeqLabel(d.num))}</span></div>
         <div class="day-info"><div class="day-ttl">${title}</div><div class="day-meta">${meta}</div></div>
       </div>
       <div class="day-body">
@@ -2336,79 +2797,100 @@ async function doExportPDF(isLandscape) {
   function buildStayHtml(s) {
     const card = document.getElementById('card-stay-' + s.id);
     if (card && card.classList.contains('card-hidden')) return '';
-    const name  = txt(`stay-${s.id}-name`)  || s.name;
-    const loc   = txt(`stay-${s.id}-loc`)   || s.loc;
-    const areas = txt(`stay-${s.id}-areas`) || s.areas.join(' · ');
-    const min   = txt(`stay-${s.id}-min`)   || s.minPrice;
-    const max   = txt(`stay-${s.id}-max`)   || s.maxPrice;
-    const tip   = (txt(`stay-${s.id}-tip`)  || s.tip).replace('💡 ','');
+    const symStay = tmPdf.currencySymbol || '¥';
+    const name  = escapeHtml(txt(`stay-${s.id}-name`) || Tx(s.name));
+    const loc   = escapeHtml(txt(`stay-${s.id}-loc`) || Tx(s.loc));
+    const areasRaw = txt(`stay-${s.id}-areas`);
+    const areasJoin = areasRaw || (Array.isArray(s.areas) ? s.areas.map(x => Tx(x)).join(' · ') : '');
+    const areas = escapeHtml(areasJoin);
+    const min   = escapeHtml(txt(`stay-${s.id}-min`) || String(s.minPrice));
+    const max   = escapeHtml(txt(`stay-${s.id}-max`) || String(s.maxPrice));
+    const tip   = escapeHtml((txt(`stay-${s.id}-tip`) || Tx(s.tip)).replace(/^💡\s*/, ''));
+    const nightsLbl = escapeHtml(Tx(s.nights));
     return `<div class="stay">
-      <div class="stay-top"><span class="stay-name">${name}</span><span class="stay-nights">${s.nights}</span></div>
+      <div class="stay-top"><span class="stay-name">${name}</span><span class="stay-nights">${nightsLbl}</span></div>
       <div class="stay-loc">📍 ${loc}</div>
-      <div class="stay-price">$${min}–${max} <span class="stay-price-sub">/night (whole house, 4 guests)</span></div>
-      <div class="stay-areas">Best areas: ${areas}</div>
+      <div class="stay-price">${symStay}${min}–${max} <span class="stay-price-sub">${escapeHtml(Ui('stay.perNightWhole'))}</span></div>
+      <div class="stay-areas">${escapeHtml(Ui('stay.bestAreas'))}: ${areas}</div>
       <div class="stay-tip">💡 ${tip}</div>
     </div>`;
   }
 
-  function buildCostRows() {
-    let lastCat = '';
+  function buildCostRowsPdf() {
+    let lastSlug = '';
+    const sym = tmPdf.currencySymbol || '¥';
     return COSTS.map((c, i) => {
-      const item  = txt(`cost-${i}-item`)  || c.item;
-      const total = txt(`cost-${i}-total`) || c.total;
-      const pp    = txt(`cost-${i}-pp`)    || c.pp;
-      const note  = txt(`cost-${i}-note`)  || c.note;
-      const span  = COSTS.filter(x => x.cat === c.cat).length;
-      const catCell = c.cat !== lastCat
-        ? `<td class="cost-cat" rowspan="${span}">${c.cat}</td>` : '';
-      if (c.cat !== lastCat) lastCat = c.cat;
-      const totalNum = String(total).replace(/[^0-9.]/g,'');
-      const totalFmt = totalNum ? '$' + Number(totalNum).toLocaleString() : '$' + total;
-      const ppNum = String(pp).replace(/[^0-9.]/g,'');
-      const ppFmt = ppNum ? '$' + Number(ppNum).toLocaleString() : '$' + pp;
+      const slug = costRowSlug(c, i);
+      const span = COSTS.filter((x, j) => costRowSlug(x, j) === slug).length;
+      const catCell = slug !== lastSlug ? `<td class="cost-cat" rowspan="${span}">${escapeHtml(Tx(c.cat))}</td>` : '';
+      if (slug !== lastSlug) lastSlug = slug;
+      const itemTxt = txt(`cost-${i}-item`);
+      const item  = escapeHtml(itemTxt || Tx(c.item));
+      const totalTxt = txt(`cost-${i}-total`);
+      const ppTxt = txt(`cost-${i}-pp`);
+      const noteTxt = txt(`cost-${i}-note`);
+      const totalSrc = totalTxt !== '' ? totalTxt : String(c.total ?? '');
+      const ppSrc = ppTxt !== '' ? ppTxt : String(c.pp ?? '');
+      const note  = escapeHtml(noteTxt || Tx(c.note));
+      const totalNum = String(totalSrc).replace(/[^0-9.]/g, '');
+      const totalFmt =
+        totalNum && !Number.isNaN(Number(totalNum))
+          ? sym + Number(totalNum).toLocaleString(undefined, { maximumFractionDigits: 0 })
+          : sym + escapeHtml(totalSrc);
+      const ppNum = String(ppSrc).replace(/[^0-9.]/g, '');
+      const ppFmt =
+        ppNum && !Number.isNaN(Number(ppNum))
+          ? sym + Number(ppNum).toLocaleString(undefined, { maximumFractionDigits: 0 })
+          : sym + escapeHtml(ppSrc);
       return `<tr>${catCell}<td>${item}</td><td class="cost-amt">${totalFmt}</td><td class="cost-pp">${ppFmt}</td><td class="cost-note">${note}</td></tr>`;
     }).join('');
   }
 
-  function buildTipHtml(t, ti) {
+  function buildTipHtmlPdf(t, ti) {
     const card = document.getElementById('card-tip-' + ti);
     if (card && card.classList.contains('card-hidden')) return '';
-    const title = txt(`tip-${ti}-title`) || t.title;
-    const items = t.items.map((_, ii) =>
-      `<li>${txt(`tip-${ti}-item${ii}`) || t.items[ii]}</li>`
+    const title = escapeHtml(txt(`tip-${ti}-title`) || Tx(t.title));
+    const items = (t.items || []).map((_, ii) =>
+      `<li>${escapeHtml(txt(`tip-${ti}-item${ii}`) || Tx(t.items[ii]))}</li>`
     ).join('');
-    return `<div class="tip-card"><div class="tip-ico">${t.icon}</div><div class="tip-ttl">${title}</div><ul class="tip-list">${items}</ul></div>`;
+    return `<div class="tip-card"><div class="tip-ico">${escapeHtml(String(t.icon || ''))}</div><div class="tip-ttl">${title}</div><ul class="tip-list">${items}</ul></div>`;
   }
 
-  const tas1Html = allDays.slice(0, 6).map(buildDayHtml).join('');
-  const tas2Html = allDays.slice(6, 11).map(buildDayHtml).join('');
-  const melbHtml = allDays.slice(11).map(buildDayHtml).join('');
+  const cqPdf = allDays.slice(0, cqCount).map(buildDayHtml).join('');
+  const xjPdf = allDays.slice(cqCount).map(buildDayHtml).join('');
   const staysHtml = STAYS.map(buildStayHtml).join('');
-  const costRows  = buildCostRows();
-  const tipsHtml  = TIPS.map(buildTipHtml).join('');
+  const costRows  = buildCostRowsPdf();
+  const tipsHtml  = TIPS.map(buildTipHtmlPdf).join('');
 
   const checklistState = loadChecklistState();
-  const sortLabels = {urgency:'Urgency', category:'Category', date:'Travel Date', status:'Status'};
+  const sortLabelsPdf = {
+    urgency: Ui('checklist.sort.urgency'),
+    category: Ui('checklist.sort.category'),
+    city: Ui('checklist.sort.city'),
+    date: Ui('checklist.sort.date'),
+    status: Ui('checklist.sort.status'),
+  };
   const pdfGroups = getChecklistGroups();
+  const bookedPdf = Ui('checklist.slotBookedSuffix');
   const checklistHtml = pdfGroups.map(g => {
     const done  = g.items.filter(it => checklistState[it.id]).length;
     const total = g.items.length;
     return `<div class="cl-group-pdf">
       <div class="cl-group-pdf-hdr" style="background:${g.color}">
-        <div><div class="cl-group-pdf-title">${g.label}</div><div class="cl-group-pdf-sub">${g.sub}</div></div>
-        <div class="cl-group-pdf-badge">${done}/${total} booked</div>
+        <div><div class="cl-group-pdf-title">${escapeHtml(g.label)}</div><div class="cl-group-pdf-sub">${escapeHtml(g.sub)}</div></div>
+        <div class="cl-group-pdf-badge">${done}/${total} ${escapeHtml(bookedPdf)}</div>
       </div>
       <div class="cl-items-pdf">
         ${g.items.map(it => {
           const checked = !!checklistState[it.id];
           return `<div class="cl-item-pdf">
             <div class="cl-box" style="${checked ? 'background:#34c759;border-color:#34c759' : ''}"></div>
-            <div class="cl-ico-pdf">${it.icon}</div>
+            <div class="cl-ico-pdf">${escapeHtml(String(it.icon || ''))}</div>
             <div class="cl-body-pdf">
-              <div class="cl-title-pdf"${checked ? ' style="text-decoration:line-through;color:#999"' : ''}>${it.title}</div>
-              <div class="cl-dates-pdf">${it.dates}</div>
-              <div class="cl-detail-pdf">${it.detail}</div>
-              <div class="cl-meta-pdf"><strong>💰 ${it.est}</strong> &nbsp;·&nbsp; 🔗 ${it.where}</div>
+              <div class="cl-title-pdf"${checked ? ' style="text-decoration:line-through;color:#999"' : ''}>${escapeHtml(Tx(it.title))}</div>
+              <div class="cl-dates-pdf">${escapeHtml(Tx(it.dates))}</div>
+              <div class="cl-detail-pdf">${escapeHtml(Tx(it.detail))}</div>
+              <div class="cl-meta-pdf"><strong>💰 ${escapeHtml(Tx(it.est))}</strong> &nbsp;·&nbsp; 🔗 ${escapeHtml(Tx(it.where))}</div>
             </div>
           </div>`;
         }).join('')}
@@ -2416,9 +2898,9 @@ async function doExportPDF(isLandscape) {
     </div>`;
   }).join('');
 
-  const heroSub  = txt('hero-sub')     || '15 days exploring the wild south.';
-  const budget   = txt('stat-budget')  || '~$4,200';
-  const totalPP  = document.getElementById('total-pp')?.textContent    || budget;
+  const htmlLang = APP_LANG === 'zh' ? 'zh-Hans' : 'en';
+  const heroSubPdf = escapeHtml(heroSubPdfRaw);
+  const totalPP  = document.getElementById('total-pp')?.textContent    || budgetPdfStr;
   const totalGrp = document.getElementById('total-group')?.textContent || '';
 
   const pdfCssRaw = await fetch(contentUrl('styles/pdf-export.css')).then(r => {
@@ -2428,136 +2910,109 @@ async function doExportPDF(isLandscape) {
   const pageRule = `@page { size: A4 ${isLandscape ? 'landscape' : 'portrait'}; margin: 14mm 14mm 16mm 14mm; }`;
   const CSS = pdfCssRaw.replace('/* __PDF_PAGE__ */', pageRule);
 
+  const P = PAGE_SEED && PAGE_SEED.pdf ? PAGE_SEED.pdf : {};
+  function pdfTx(key, fallback) {
+    const raw = Object.prototype.hasOwnProperty.call(P, key) ? P[key] : fallback;
+    return escapeHtml(Tx(raw));
+  }
+
+  const colCat = escapeHtml(Ui('pdf.thCategory'));
+  const colItem = escapeHtml(Ui('pdf.thItem'));
+  const colTot = escapeHtml(Ui('pdf.thGroup'));
+  const colPp = escapeHtml(Ui('pdf.thPP'));
+  const colNote = escapeHtml(Ui('pdf.thNotes'));
+  const mapsFallback = `<p style="color:#888;font-size:9pt">${escapeHtml(Ui('pdf.mapsMissing'))}</p>`;
+
   const HTML = `<!DOCTYPE html>
-<html lang="en">
+<html lang="${htmlLang}">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tasmania & Melbourne — December 2026 Itinerary</title>
+<title>${pdfTx('docTitle', OvPdf.heroTitle || { en: 'Chongqing ↔ Xinjiang — itinerary', zh: '重庆 ↔ 新疆 — 行程' })}</title>
 <style>${CSS}</style>
 </head>
 <body>
 
-<!-- ═══ COVER ═══ -->
 <div class="cover">
   <div>
-    <div class="cover-label">December 7–21, 2026 · 4 Friends · 1 RAV4</div>
-    <div class="cover-title">Tasmania &amp;<br>Melbourne</div>
-    <div class="cover-sub">${heroSub}</div>
+    <div class="cover-label">${pdfTx('coverLabel')}</div>
+    <div class="cover-title">${pdfTx('coverTitle', OvPdf.heroTitle || { en: 'Chongqing & Xinjiang', zh: '重庆与新疆' })}</div>
+    <div class="cover-sub">${heroSubPdf}</div>
     <div class="stats">
-      <div class="stat-box"><div class="stat-val">15</div><div class="stat-lbl">Days total</div></div>
-      <div class="stat-box"><div class="stat-val">4</div><div class="stat-lbl">Travellers</div></div>
-      <div class="stat-box"><div class="stat-val">~2,100km</div><div class="stat-lbl">Total driving</div></div>
-      <div class="stat-box"><div class="stat-val">${budget}</div><div class="stat-lbl">Est. per person (AUD)</div></div>
-    </div>
-    <div class="route-box">
-      <div class="route-lbl">Tasmania · Dec 7–17</div>
-      <div class="route-stops">
-        <span class="rs">✈ SIN → Hobart</span><span class="ra">→</span>
-        <span class="rs">Hobart</span><span class="ra">→</span>
-        <span class="rs">Bruny Is.</span><span class="ra">→</span>
-        <span class="rs">Maria Is.</span><span class="ra">→</span>
-        <span class="rs">Port Arthur</span><span class="ra">→</span>
-        <span class="rs">Freycinet</span><span class="ra">→</span>
-        <span class="rs">Bay of Fires</span><span class="ra">→</span>
-        <span class="rs">Cradle Mtn</span><span class="ra">→</span>
-        <span class="rs">✈ Melbourne</span>
-      </div>
-    </div>
-    <div class="route-box">
-      <div class="route-lbl">Melbourne & Great Ocean Road · Dec 17–21</div>
-      <div class="route-stops">
-        <span class="rs">Melbourne</span><span class="ra">→</span>
-        <span class="rs">Torquay</span><span class="ra">→</span>
-        <span class="rs">Lorne</span><span class="ra">→</span>
-        <span class="rs">Apollo Bay</span><span class="ra">→</span>
-        <span class="rs">Cape Otway</span><span class="ra">→</span>
-        <span class="rs">12 Apostles</span><span class="ra">→</span>
-        <span class="rs">✈ Fly home</span>
-      </div>
+      <div class="stat-box"><div class="stat-val">${escapeHtml(daysPdfStr)}</div><div class="stat-lbl">${escapeHtml(Ui('stat.daysTotal'))}</div></div>
+      <div class="stat-box"><div class="stat-val">${escapeHtml(gsPdfStr)}</div><div class="stat-lbl">${escapeHtml(Ui('stat.travellers'))}</div></div>
+      <div class="stat-box"><div class="stat-val">${drivePdfStr}</div><div class="stat-lbl">${escapeHtml(Ui('stat.drive'))}</div></div>
+      <div class="stat-box"><div class="stat-val">${budgetPdfStr}</div><div class="stat-lbl">${escapeHtml(Ui('stat.pp').replace(/\{cur\}/g, tmPdf.currencySymbol || '¥'))}</div></div>
     </div>
   </div>
-  <div class="cover-foot">All costs in AUD · December 2026 peak season estimates · Generated from your trip planner</div>
+  <div class="cover-foot">${pdfTx('coverFoot')}</div>
 </div>
 
-<!-- ═══ ROUTE MAPS ═══ -->
 <div class="sec">
-  <div class="tag">Route Overview</div>
-  <h2>Trip Maps</h2>
+  <div class="tag">${pdfTx('mapsTag')}</div>
+  <h2>${pdfTx('mapsTitle')}</h2>
 </div>
-${(mapTasUrl || mapMelbUrl) ? `
-<div class="${isLandscape && mapTasUrl && mapMelbUrl ? 'maps-grid' : ''}">
-  ${mapTasUrl ? `<div class="map-section-pdf">
-    <div class="map-label tas">🗺 Tasmania · 11-day clockwise loop</div>
-    <img class="map-img" src="${mapTasUrl}" alt="Tasmania route map">
-    <div class="map-caption">Hobart → Bruny Is. → Maria Is. → Port Arthur → Freycinet → Bay of Fires → Bridestowe → Cradle Mountain → Hobart (fly) · ~1,500 km total</div>
+${(mapCqUrl || mapXjUrl) ? `
+<div class="${isLandscape && mapCqUrl && mapXjUrl ? 'maps-grid' : ''}">
+  ${mapCqUrl ? `<div class="map-section-pdf">
+    <div class="map-label cq">🗺 ${pdfTx('mapCqLabel')}</div>
+    <img class="map-img" src="${mapCqUrl}" alt="Map CQ">
+    <div class="map-caption">${pdfTx('mapCqCaption')}</div>
   </div>` : ''}
-  ${mapMelbUrl ? `<div class="map-section-pdf">
-    <div class="map-label melb">🗺 Melbourne & Great Ocean Road</div>
-    <img class="map-img" src="${mapMelbUrl}" alt="Melbourne and Great Ocean Road map">
-    <div class="map-caption">Melbourne → Torquay → Anglesea → Lorne → Kennett River → Apollo Bay → Cape Otway → Twelve Apostles → Melbourne · ~600 km total</div>
+  ${mapXjUrl ? `<div class="map-section-pdf">
+    <div class="map-label xj">🗺 ${pdfTx('mapXjLabel')}</div>
+    <img class="map-img" src="${mapXjUrl}" alt="Map XJ">
+    <div class="map-caption">${pdfTx('mapXjCaption')}</div>
   </div>` : ''}
-</div>` : '<p style="color:#888;font-size:9pt">Maps could not be captured — view interactive maps in the trip planner.</p>'}
+</div>` : mapsFallback}
 
-<!-- ═══ TASMANIA SOUTH ═══ -->
 <div class="sec">
-  <div class="tag">Tasmania · Days 1–6 · Dec 7–12</div>
-  <h2>South Tasmania & Hobart Base</h2>
+  <div class="tag">${pdfTx('secCqTag')}</div>
+  <h2>${pdfTx('secCqTitle')}</h2>
 </div>
-${tas1Html}
+${cqPdf}
 
-<!-- ═══ TASMANIA EAST & HIGHLANDS ═══ -->
 <div class="sec">
-  <div class="tag">Tasmania · Days 7–11 · Dec 13–17</div>
-  <h2>East Coast & Highlands</h2>
+  <div class="tag">${pdfTx('secXjTag')}</div>
+  <h2>${pdfTx('secXjTitle')}</h2>
 </div>
-${tas2Html}
+${xjPdf}
 
-<!-- ═══ MELBOURNE & GOR ═══ -->
 <div class="sec">
-  <div class="tag">Victoria · Days 12–15 · Dec 18–21</div>
-  <h2>Melbourne & Great Ocean Road</h2>
-</div>
-${melbHtml}
-
-<!-- ═══ ACCOMMODATION ═══ -->
-<div class="sec">
-  <div class="tag">Planning</div>
-  <h2>Accommodation — 14 Nights, 7 Locations</h2>
+  <div class="tag">${pdfTx('staysTag')}</div>
+  <h2>${pdfTx('staysTitle')}</h2>
 </div>
 ${staysHtml}
 
-<!-- ═══ BUDGET ═══ -->
 <div class="sec">
-  <div class="tag">Costs & Budget</div>
-  <h2>Budget Breakdown — All Figures AUD</h2>
+  <div class="tag">${pdfTx('budgetTag')}</div>
+  <h2>${pdfTx('budgetTitle')}</h2>
 </div>
 <div class="b-totals">
-  <div class="b-total"><div class="b-val">${totalPP}</div><div class="b-lbl">Per person (mid-range)</div></div>
-  <div class="b-total"><div class="b-val">${totalGrp}</div><div class="b-lbl">Total group (4 people)</div></div>
+  <div class="b-total"><div class="b-val">${escapeHtml(totalPP)}</div><div class="b-lbl">${escapeHtml(Ui('pdf.budgetPpLbl'))}</div></div>
+  <div class="b-total"><div class="b-val">${escapeHtml(totalGrp)}</div><div class="b-lbl">${escapeHtml(Ui('pdf.budgetGrpLbl'))}</div></div>
 </div>
 <table class="ctable">
-  <thead><tr><th>Category</th><th>Item</th><th>Group Total</th><th>Per Person</th><th>Notes</th></tr></thead>
+  <thead><tr><th>${colCat}</th><th>${colItem}</th><th>${colTot}</th><th>${colPp}</th><th>${colNote}</th></tr></thead>
   <tbody>${costRows}</tbody>
 </table>
 
-<!-- ═══ TIPS ═══ -->
 <div class="sec">
-  <div class="tag">Practical Info</div>
-  <h2>Tips & Essential Info</h2>
+  <div class="tag">${pdfTx('tipsTag')}</div>
+  <h2>${pdfTx('tipsTitle')}</h2>
 </div>
 <div class="tips">${tipsHtml}</div>
 
-<!-- ═══ BOOKING CHECKLIST ═══ -->
 <div class="sec">
-  <div class="tag">Action Items</div>
-  <h2>Booking Checklist — December 7–21, 2026</h2>
-  <p style="font-size:9pt;color:#888;margin-top:4pt">Sorted by: ${sortLabels[clSort] || 'Urgency'}</p>
+  <div class="tag">${pdfTx('checklistTag')}</div>
+  <h2>${pdfTx('checklistTitle')}</h2>
+  <p style="font-size:9pt;color:#888;margin-top:4pt">${escapeHtml(pdfTx('checklistSorted'))}: ${escapeHtml(sortLabelsPdf[clSort] || sortLabelsPdf.urgency)}</p>
 </div>
 ${checklistHtml}
 
 </body>
 </html>`;
+
 
   if (toast.parentNode) toast.parentNode.removeChild(toast);
 
@@ -2574,7 +3029,10 @@ ${checklistHtml}
   }, 700);
   } catch (e) {
     console.error('doExportPDF', e);
-    showAlert('Could not build the PDF (' + (e.message || 'unknown error') + '). Try again on Wi‑Fi or use a desktop browser.', 'PDF export');
+    showAlert(
+      `${Ui('pdf.alertFail') || 'PDF export failed'} (${e.message || 'unknown'})`,
+      Ui('modal.pdfTitle') || 'PDF',
+    );
   } finally {
     if (toast.parentNode) toast.parentNode.removeChild(toast);
   }
@@ -2726,11 +3184,11 @@ function openConflictModal(conflicts, mergedSnap) {
       <div class="conflict-item-hdr">⚠️ ${c.label}</div>
       <div class="conflict-vals">
         <div class="conflict-val">
-          <div class="conflict-val-lbl">📲 New version</div>
+          <div class="conflict-val-lbl">${escapeHtml(Ui('conflict.pickNew'))}</div>
           <div class="conflict-val-text" id="cfdev-${i}">${stripHTML(c.devVal)||'(empty)'}</div>
         </div>
         <div class="conflict-val">
-          <div class="conflict-val-lbl">✏️ Your edit</div>
+          <div class="conflict-val-lbl">${escapeHtml(Ui('conflict.pickOld'))}</div>
           <div class="conflict-val-text" id="cfuser-${i}">${stripHTML(c.userVal)||'(empty)'}</div>
         </div>
       </div>
@@ -2775,9 +3233,9 @@ function saveConflictChoices() {
 // INIT
 // ═══════════════════════════════════════
 function init() {
-  renderDays(DAYS_TAS1, 'days-tas1');
-  renderDays(DAYS_TAS2, 'days-tas2');
-  renderDays(DAYS_MELB, 'days-melb');
+  seedOverviewFromPageSeed();
+  renderDays(DAYS_CQ, 'days-cq');
+  renderDays(DAYS_XJ, 'days-xj');
   renderStays();
   renderCostTable();
   renderTips();
@@ -2786,113 +3244,155 @@ function init() {
   renderChecklist();
 
   loadFlightOverlay();
+  refreshFlightChromeI18n();
   renderFlights();
 
+  applyUiAnchors();
+  refreshLangClasses();
+  refreshLangSidebarToggle();
+  refreshPlannerChromeI18n();
+
   checkVersionMerge(); // applies history + handles version-change merge
+  captureDomDefaultsFromDom();
   setTimeout(initMaps, 200);
 }
 
 // ═══════════════════════════════════════
 // MAPS
 // ═══════════════════════════════════════
+
+function captureDomDefaultsFromDom() {
+  DOM_DEFAULT_HTML = {};
+  document.querySelectorAll('[data-key]').forEach(el => {
+    if (el.dataset.key) DOM_DEFAULT_HTML[el.dataset.key] = el.innerHTML;
+  });
+}
+
+/** Apply JSON-driven overview copy (dual-language spans inside hero + key stats rows). */
+function seedOverviewFromPageSeed() {
+  const ov = PAGE_SEED && PAGE_SEED.overview;
+  const tm = TRIP_META || {};
+  const days = tm.totalDays != null ? String(tm.totalDays) : String((DAYS_CQ || []).length + (DAYS_XJ || []).length);
+  const people = tm.groupSize != null ? String(tm.groupSize) : '4';
+  const drive = Tx(tm.statDrivingKmApprox || '');
+  const bud = Tx(tm.statBudgetApprox || '');
+  document.querySelectorAll('[data-trip-stat]').forEach(el => {
+    const which = el.getAttribute('data-trip-stat');
+    if (which === 'days') el.textContent = days;
+    else if (which === 'people') el.textContent = people;
+    else if (which === 'km') el.textContent = drive;
+    else if (which === 'budget') el.textContent = bud;
+  });
+  const tagEl = document.getElementById('overview-hero-tag');
+  const titleEl = document.getElementById('overview-hero-title');
+  const subEl = document.getElementById('overview-hero-sub');
+  if (!ov) return;
+  if (tagEl && ov.heroTag) tagEl.innerHTML = lngMarkup(ov.heroTag);
+  if (titleEl && ov.heroTitle) titleEl.innerHTML = lngMarkup(ov.heroTitle);
+  if (subEl && ov.heroSub) subEl.innerHTML = lngMarkup(ov.heroSub);
+  const jd = document.getElementById('overview-route-cq-caption');
+  const xjd = document.getElementById('overview-route-xj-caption');
+  if (jd && ov.routeChongqingCaption) jd.innerHTML = lngMarkup(ov.routeChongqingCaption);
+  if (xjd && ov.routeXinjiangCaption) xjd.innerHTML = lngMarkup(ov.routeXinjiangCaption);
+}
+
+function refreshFlightChromeI18n() {
+  document.querySelectorAll('.flight-board-sec-tag').forEach(el => {
+    el.textContent = Ui('flight.schedule');
+  });
+  document.querySelectorAll('.flight-board-sec-title').forEach(el => {
+    el.textContent = Ui('flight.yours');
+  });
+  const addBtn = document.getElementById('flight-add-btn');
+  if (addBtn) addBtn.textContent = Ui('flight.add');
+  updateFlightBoardToggleLabelOnly();
+}
+
+function updateFlightBoardToggleLabelOnly() {
+  const btn = document.getElementById('flight-board-toggle');
+  const wrap = document.getElementById('flight-board-section');
+  if (!btn || !wrap) return;
+  const collapsed = wrap.classList.contains('flight-board-wrap--collapsed');
+  btn.textContent = collapsed ? Ui('flight.show') : Ui('flight.hide');
+}
+
+function tripBuildOneRegionalMap(sectionKey, elId) {
+  try {
+    const spec = MAPS_DATA[sectionKey];
+    const el = document.getElementById(elId);
+    if (!spec || !el || !Array.isArray(spec.stops) || spec.stops.length === 0) return null;
+
+    const tileOpts = { maxZoom: 19, attribution: '© Esri', crossOrigin: true };
+    const c = spec.center;
+    let lat0;
+    let lng0;
+    if (Array.isArray(c) && c.length >= 2) {
+      lat0 = c[0];
+      lng0 = c[1];
+    } else {
+      lat0 = spec.stops[0].lat;
+      lng0 = spec.stops[0].lng;
+    }
+    const zm = Number(spec.zoom) > 0 ? spec.zoom : 8;
+
+    const map = L.map(elId, { zoomControl: true, scrollWheelZoom: false }).setView([lat0, lng0], zm);
+    L.tileLayer(TRIP_SATELLITE_TILE_URL, tileOpts).addTo(map);
+
+    const hueMain = sectionKey === 'cq' ? '#0284c7' : '#f97316';
+    const hueLine = sectionKey === 'cq' ? '#7dd3fc' : '#fdba74';
+
+    const mainSeq = spec.stops.filter(s => !s.daytrip);
+    const mainLngLat = mainSeq.map(s => [s.lng, s.lat]);
+    if (mainLngLat.length >= 2) {
+      const path = tripLineLngLatToLeaflet(tripGreatCircleLine(mainLngLat, 28));
+      L.polyline(path, { color: hueMain, weight: 11, opacity: 0.38, lineJoin: 'round' }).addTo(map);
+      L.polyline(path, { color: hueLine, weight: 3.5, opacity: 0.92, lineJoin: 'round' }).addTo(map);
+    }
+
+    spec.stops.forEach(s => {
+      const hue = sectionKey === 'cq' ? (s.daytrip ? '#22c55e' : hueMain) : s.daytrip ? '#22c55e' : '#ff9500';
+      const sz = s.daytrip ? 24 : 28;
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="width:${sz}px;height:${sz}px;border-radius:50%;background:${hue};border:2.5px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;font-size:${
+          s.daytrip ? 10 : 11
+        }px;font-weight:700;color:#fff;font-family:var(--font),system-ui,sans-serif">${s.num}</div>`,
+        iconSize: [sz, sz],
+        iconAnchor: [sz / 2, sz / 2],
+        popupAnchor: [0, -sz / 2],
+      });
+      L.marker([s.lat, s.lng], { icon })
+        .addTo(map)
+        .bindPopup(`<strong>${escapeHtml(Tx(s.label))}</strong><br/>${escapeHtml(Tx(s.note))}`);
+    });
+
+    try {
+      map.fitBounds(L.latLngBounds(spec.stops.map(st => [st.lat, st.lng])), {
+        padding: [50, 50],
+        maxZoom: sectionKey === 'cq' ? 11 : 8,
+      });
+    } catch (_) {
+      map.setView([lat0, lng0], zm);
+    }
+    return map;
+  } catch (e) {
+    console.warn('tripBuildOneRegionalMap', sectionKey, e);
+    return null;
+  }
+}
+
 function initMaps() {
   try {
     if (typeof L === 'undefined') {
       console.warn('Leaflet not loaded; maps disabled');
       return;
     }
-    const tileOpts = { maxZoom: 19, attribution: '© Esri', crossOrigin: true };
-
-    // ── Tasmania Map ──────────────────────────────────────────
-    const mapTas = L.map('map-tas', { zoomControl: true, scrollWheelZoom: false }).setView([-42.2, 146.8], 7);
-    L.tileLayer(TRIP_SATELLITE_TILE_URL, tileOpts).addTo(mapTas);
-    window._mapTas = mapTas;
-
-    const tasStops = [
-      { lat:-42.8821, lng:147.3272, num:1,  label:'Hobart', note:'Dec 7–10 · 4 nights · Base for Bruny & Maria day trips', color:'#0071e3', daytrip:false },
-      { lat:-43.38,   lng:147.28,   num:'A', label:'Bruny Island', note:'Dec 9 · Day trip · Wilderness cruise, oysters, bread fridge', color:'#34c759', daytrip:true },
-      { lat:-42.62,   lng:148.07,   num:'B', label:'Maria Island', note:'Dec 10 · Day trip · Painted Cliffs, wombats, convict ruins', color:'#34c759', daytrip:true },
-      { lat:-42.6750, lng:146.5528, num:2,  label:'Mt Field NP', note:'Dec 11 · Morning stop en route Port Arthur', color:'#0071e3', daytrip:false },
-      { lat:-43.1397, lng:147.8572, num:3,  label:'Port Arthur', note:'Dec 11 · 1 night · Historic penal colony, Isle of the Dead', color:'#0071e3', daytrip:false },
-      { lat:-42.1167, lng:148.2833, num:4,  label:'Freycinet (Coles Bay)', note:'Dec 12–13 · 2 nights · Wineglass Bay, Mount Amos', color:'#0071e3', daytrip:false },
-      { lat:-41.3197, lng:148.2467, num:5,  label:'Bay of Fires / St Helens', note:'Dec 14 · 1 night · Pyengana dairy, Swimcart Beach', color:'#0071e3', daytrip:false },
-      { lat:-41.25,   lng:147.58,   num:'C', label:'Bridestowe Lavender', note:'Dec 15 · Morning stop · World\'s largest lavender estate', color:'#34c759', daytrip:true },
-      { lat:-41.4419, lng:147.145,  num:6,  label:'Launceston', note:'Dec 15 · Brief stop · Cataract Gorge', color:'#0071e3', daytrip:false },
-      { lat:-41.6417, lng:145.95,   num:7,  label:'Cradle Mountain', note:'Dec 15–16 · 2 nights · Dove Lake, Barn Bluff', color:'#0071e3', daytrip:false },
-      { lat:-42.8821, lng:147.3272, num:8,  label:'Hobart Airport', note:'Dec 17 · Fly to Melbourne · Return RAV4 · No one-way fee', color:'#ff3b30', daytrip:false },
-    ];
-
-    const mainLngLat = tasStops.filter(s => !s.daytrip).map(s => [s.lng, s.lat]);
-    const mainPath = tripLineLngLatToLeaflet(tripGreatCircleLine(mainLngLat, 36));
-    L.polyline(mainPath, { color: '#0ea5e9', weight: 11, opacity: 0.38, lineJoin: 'round' }).addTo(mapTas);
-    L.polyline(mainPath, { color: '#7dd3fc', weight: 3.5, opacity: 0.95, lineJoin: 'round' }).addTo(mapTas);
-
-    function addTasDash(a, b) {
-      const latlngs = tripLineLngLatToLeaflet(tripGreatCircleLine([[a.lng, a.lat], [b.lng, b.lat]], 18));
-      L.polyline(latlngs, { color: '#4ade80', weight: 2.5, opacity: 0.72, dashArray: '6 8', lineJoin: 'round' }).addTo(mapTas);
-    }
-    addTasDash(tasStops[0], tasStops[1]);
-    addTasDash(tasStops[0], tasStops[2]);
-    addTasDash(tasStops[5], tasStops[7]);
-
-    tasStops.forEach(s => {
-      const size = s.daytrip ? 24 : 28;
-      const icon = L.divIcon({
-        className: '',
-        html:`<div style="width:${size}px;height:${size}px;border-radius:50%;background:${s.color};border:2.5px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;font-size:${s.daytrip ? 10 : 11}px;font-weight:700;color:#fff;font-family:var(--font),system-ui,sans-serif">${s.num}</div>`,
-        iconSize:[size, size], iconAnchor:[size / 2, size / 2], popupAnchor:[0, -size / 2],
-      });
-      L.marker([s.lat, s.lng], { icon }).addTo(mapTas).bindPopup(`<strong>${s.label}</strong><br/>${s.note}`);
-    });
-
-    try {
-      mapTas.fitBounds(L.latLngBounds(tasStops.map(s => [s.lat, s.lng])), { padding: [52, 52], maxZoom: 8 });
-    } catch (_) {
-      mapTas.setView([tasStops[0].lat, tasStops[0].lng], 7);
-    }
-
-    // ── Melbourne / GOR Map ───────────────────────────────────
-    const mapMelb = L.map('map-melb', { zoomControl: true, scrollWheelZoom: false }).setView([-38.4, 144.2], 8);
-    L.tileLayer(TRIP_SATELLITE_TILE_URL, tileOpts).addTo(mapMelb);
-    window._mapMelb = mapMelb;
-
-    const melbStops = [
-      { lat:-37.8136, lng:144.9631, num:1, label:'Melbourne', note:'Dec 17–18 · 2 nights · Laneways, markets, penguins' },
-      { lat:-38.3367, lng:144.3253, num:2, label:'Torquay', note:'Dec 19 · Bells Beach, surf culture, GOR km 0' },
-      { lat:-38.4042, lng:144.1869, num:3, label:'Anglesea', note:'Dec 19 · Kangaroos on the golf course' },
-      { lat:-38.5469, lng:143.9811, num:4, label:'Lorne', note:'Dec 19 · Lunch, Erskine Falls, foreshore views' },
-      { lat:-38.6603, lng:143.8644, num:5, label:'Kennett River', note:'Dec 19 · Best wild koalas in Victoria' },
-      { lat:-38.7578, lng:143.6717, num:6, label:'Apollo Bay', note:'Dec 19–20 · 2 nights · Base for western GOR' },
-      { lat:-38.8583, lng:143.5133, num:7, label:'Cape Otway', note:'Dec 20 · Lighthouse, koalas, rainforest' },
-      { lat:-38.6634, lng:143.105,  num:8, label:'Twelve Apostles', note:'Dec 20 · Sunset at the rock stacks · ~2 hrs from Apollo Bay' },
-      { lat:-37.8136, lng:144.9631, num:9, label:'Melbourne (return)', note:'Dec 21 · Return via inland — Geelong or Princes Freeway' },
-    ];
-
-    const gorLngLat = melbStops.map(s => [s.lng, s.lat]);
-    const gorPath = tripLineLngLatToLeaflet(tripGreatCircleLine(gorLngLat, 36));
-    L.polyline(gorPath, { color: '#fb923c', weight: 11, opacity: 0.42, lineJoin: 'round' }).addTo(mapMelb);
-    L.polyline(gorPath, { color: '#fdba74', weight: 3.5, opacity: 0.95, lineJoin: 'round' }).addTo(mapMelb);
-
-    melbStops.forEach((s, i) => {
-      const isEnd = i === melbStops.length - 1;
-      const color = isEnd ? '#86868b' : '#ff9500';
-      const icon = L.divIcon({
-        className: '',
-        html:`<div style="width:28px;height:28px;border-radius:50%;background:${color};border:2.5px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;font-family:var(--font),system-ui,sans-serif">${s.num}</div>`,
-        iconSize:[28, 28], iconAnchor:[14, 14], popupAnchor:[0, -14],
-      });
-      L.marker([s.lat, s.lng], { icon }).addTo(mapMelb).bindPopup(`<strong>${s.label}</strong><br/>${s.note}`);
-    });
-
-    try {
-      mapMelb.fitBounds(L.latLngBounds(melbStops.map(s => [s.lat, s.lng])), { padding: [50, 50], maxZoom: 9 });
-    } catch (_) {
-      mapMelb.setView([melbStops[0].lat, melbStops[0].lng], 8);
-    }
+    window._mapCQ = tripBuildOneRegionalMap('cq', 'map-cq');
+    window._mapXJ = tripBuildOneRegionalMap('xj', 'map-xj');
 
     requestAnimationFrame(() => {
-      mapTas.invalidateSize();
-      mapMelb.invalidateSize();
+      window._mapCQ && window._mapCQ.invalidateSize();
+      window._mapXJ && window._mapXJ.invalidateSize();
     });
   } catch (e) {
     console.error('initMaps', e);
@@ -2902,8 +3402,8 @@ function initMaps() {
 // ═══════════════════════════════════════
 // AUTH
 // ═══════════════════════════════════════
-const _AH = '9172fe8ff387c2cc69d2a0bb8723a6544bf2252c60b18048f5e8a493b6aa6190';
-const _AS = 'TasMelb_j9Rx2026';
+const _AH = 'c3edd6e8d8e13da6055b9a49976fba14fa65141dc63bc1ab103d3a4518963424';
+const _AS = 'CQXJ_planner_v1';
 const _AK = 'tripAuthToken';
 
 async function _hashInput(val) {
@@ -2931,12 +3431,12 @@ async function submitAuth() {
   if (!val) return;
 
   btn.disabled = true;
-  btn.textContent = 'Checking…';
+  btn.textContent = Ui('auth.checking');
   err.textContent = '';
 
   try {
     if (!globalThis.crypto?.subtle) {
-      err.textContent = 'This page needs a secure connection (https) to verify the password. Use the site’s GitHub Pages URL, not http or file.';
+      err.textContent = Ui('auth.secureHint');
       return;
     }
     const hash = await _hashInput(val);
@@ -2950,16 +3450,16 @@ async function submitAuth() {
     } else {
       input.value = '';
       input.classList.add('error');
-      err.textContent = 'Incorrect password. Try again.';
+      err.textContent = Ui('auth.wrong');
       setTimeout(() => input.classList.remove('error'), 400);
       input.focus();
     }
   } catch (e) {
     console.error(e);
-    err.textContent = 'Could not verify password (try again, or use the https site link).';
+    err.textContent = Ui('auth.verifyFail');
   } finally {
     btn.disabled = false;
-    btn.textContent = 'Unlock';
+    btn.textContent = Ui('auth.unlock');
   }
 }
 

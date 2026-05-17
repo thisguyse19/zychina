@@ -1,5 +1,5 @@
 /* Minimal service worker for installability and offline shell (GitHub Pages–friendly). */
-const CACHE = 'triple-v49';
+const CACHE = 'cqxj-planner-v1';
 
 function isContentJsonUrl(url) {
   try {
