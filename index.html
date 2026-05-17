@@ -44,7 +44,7 @@
     <div class="auth-title"><span class="trip-lng trip-lng--en">Xinjiang!</span><span class="trip-lng trip-lng--zh" hidden>新疆！</span></div>
     <div class="auth-sub" data-ui="auth.sub"></div>
     <label class="auth-label" for="auth-input" data-ui="auth.password"></label>
-    <input id="auth-input" class="auth-input" type="password" data-ui="auth.placeholder" placeholder="" autocomplete="current-password" onkeydown="if(event.key==='Enter')submitAuth()">
+    <input id="auth-input" class="auth-input" type="password" data-ui="auth.placeholder" placeholder="" autocomplete="current-password" onkeydown="if(event.key==='Enter'){event.preventDefault();window.submitAuth&&window.submitAuth();}">
     <label class="auth-remember">
       <input type="checkbox" id="auth-remember">
       <span data-ui="auth.remember"></span>

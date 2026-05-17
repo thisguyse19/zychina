@@ -69,7 +69,7 @@ function Tx(v) {
 
 function Ui(key) {
   const b = APP_LANG === 'zh' ? UI_ZH : UI_EN;
-  const fb = APP_ENGLISH_FALLBACK_LOOKUP(key);
+  const fb = UI_ENGLISH_FALLBACK_LOOKUP(key);
   return (b[key] != null ? b[key] : UI_EN[key]) || fb || key;
 }
 
@@ -3828,6 +3828,15 @@ window.addEventListener('DOMContentLoaded', () => {
     } catch (e) {
       console.error(e);
       alert('Could not load content/trip-data.json. If testing locally, use a static server (e.g. npx serve). On GitHub Pages, verify content/trip-data.json is published.');
+    }
+    if (dataLoaded) {
+      try {
+        applyUiAnchors();
+        refreshLangClasses();
+        refreshLangSidebarToggle();
+      } catch (e) {
+        console.error('applyUiAnchors (pre-auth)', e);
+      }
     }
     try {
       checkAuth();
