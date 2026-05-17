@@ -534,14 +534,16 @@ body::before{
 .flight-card-edit:hover{background:var(--btn-fill-hover);box-shadow:var(--btn-shadow-hover)}
 
 /* ONBOARDING WIZARD */
-.onboard-modal{max-width:500px;position:relative;padding-top:36px}
+.onboard-modal{max-width:500px;display:flex;flex-direction:column;gap:0}
+.onboard-header{
+  flex-shrink:0;display:flex;justify-content:center;align-items:center;
+  padding:2px 0 14px;margin:0 0 4px}
 .onboard-pill{
-  position:absolute;top:14px;left:50%;transform:translateX(-50%);
   font-size:11px;font-weight:700;letter-spacing:.04em;
   padding:4px 12px;border-radius:20px;
   background:rgba(0,113,227,.1);color:var(--blue);
   border:1px solid rgba(0,113,227,.2)}
-.onboard-steps{min-height:200px}
+.onboard-steps{flex:1;min-height:200px}
 .onboard-step{display:none}
 .onboard-step.active{display:block}
 .onboard-step-center{text-align:center;margin-bottom:18px}
@@ -565,6 +567,15 @@ body::before{
 .onboard-actions .onboard-back:only-child + .onboard-next,
 .onboard-actions .onboard-back[hidden] + .onboard-next{margin-left:auto;margin-right:auto}
 .onboard-next:disabled{opacity:.45;cursor:not-allowed}
+@media (hover:none) and (pointer:coarse){
+  .onboard-actions .btn:hover{background:var(--btn-fill);box-shadow:var(--btn-shadow);filter:none}
+  .onboard-actions .btn-blue:hover{
+    background:rgba(0,122,255,.96);filter:none;
+    box-shadow:0 3px 14px rgba(0,122,255,.28),var(--btn-shadow)}
+  .onboard-actions .btn:focus{outline:none}
+  .onboard-actions .btn:active{transform:none;opacity:1}
+}
+.onboard-actions .btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
 /* WELCOME MODAL */
 .welcome-items{margin:0 -4px}
 .welcome-item{display:flex;gap:14px;align-items:flex-start;padding:14px 4px;border-bottom:1px solid var(--border)}
